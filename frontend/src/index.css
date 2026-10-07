@@ -2,13 +2,13 @@
   font-family: Inter, 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #e2e8f0;
-  background: #08111f;
+  color: #4a1d2d;
+  background: #fdf2f8;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -24,8 +24,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top, rgba(96, 165, 250, 0.18), transparent 30%),
-    linear-gradient(180deg, #071320 0%, #0d172a 100%);
+    radial-gradient(circle at top, rgba(251, 113, 133, 0.18), transparent 30%),
+    linear-gradient(180deg, #fff7fb 0%, #fce7f3 100%);
 }
 
 img,
