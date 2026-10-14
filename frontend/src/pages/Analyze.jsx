@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 import LoadingState from '../components/LoadingState'
 import { analyzeVideo } from '../services/api'
+import { saveAnalysisHistory } from '../services/analysisHistory'
 import { formatDuration, formatFileSize, formatNumber } from '../utils/formatters'
 
 const ACCEPTED_TYPES = [
@@ -95,7 +96,17 @@ function Analyze() {
         setStatusText(message || 'Analyzing video...')
       })
 
-      navigate('/results', { state: { analysis: result } })
+      let historyId
+      try {
+        historyId = await saveAnalysisHistory(selectedFile, result)
+      } catch (storageError) {
+        throw new Error(
+          `Analysis completed, but it could not be saved in this browser: ${storageError.message}`,
+          { cause: storageError },
+        )
+      }
+
+      navigate('/results', { state: { historyId } })
     } catch (err) {
       setError(err.message || 'An unexpected error occurred while analyzing the video.')
     } finally {
@@ -169,7 +180,7 @@ function Analyze() {
         ) : null}
 
         <div className="privacy-message">
-          Video processing happens locally in your browser. Your video is not uploaded to a server.
+          Your video is analyzed and saved privately in this browser so you can revisit its results later. It is not uploaded to a server.
         </div>
 
         {error ? <div className="error-message">{error}</div> : null}

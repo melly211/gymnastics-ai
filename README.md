@@ -11,6 +11,7 @@ Gymnastics AI is a lightweight sports-tech MVP for analyzing gymnastics movement
 - Joint angle extraction for elbows and knees
 - Simple movement statistics and feedback
 - Recharts dashboard for time-series motion data
+- Private analysis history saved in the current browser, including the original videos
 
 ## Tech Stack
 
@@ -78,10 +79,11 @@ Then open the frontend in the browser at `http://localhost:5173`.
 ## How It Works
 
 1. Upload a gymnastics video from the Analyze page.
-2. The backend validates and stores the file temporarily.
-3. OpenCV reads the video and MediaPipe detects pose landmarks.
-4. Joint angles are calculated frame by frame.
-5. Results return to the frontend dashboard with charts and feedback.
+2. MediaPipe detects pose landmarks in the browser as the video is sampled.
+3. Joint angles and movement statistics are calculated from the detected landmarks.
+4. The analysis and original video are saved in this browser's IndexedDB and shown on the results dashboard.
+
+Saved history is local to the current browser profile and is not uploaded or synced. Clearing this site's browser data removes the saved analyses and videos. Browser storage limits apply, so saving can fail if there is not enough space.
 
 ## Known Limitations
 
@@ -95,5 +97,4 @@ Then open the frontend in the browser at `http://localhost:5173`.
 - Better filtering and smoothing of joint angle data
 - Video overlay with pose landmarks
 - More advanced movement scoring
-- Session history and saved analyses
 - Model-based coaching recommendations
