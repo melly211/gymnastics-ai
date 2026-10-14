@@ -347,8 +347,9 @@
 
 .uploaded-preview {
   width: auto;
-  max-width: 100%;
-  max-height: min(45vh, 480px);
+  height: auto;
+  max-width: min(100%, 420px);
+  max-height: min(30vh, 280px);
   margin: 18px auto 0;
   object-fit: contain;
   border-radius: 18px;
