@@ -1,11 +1,11 @@
-import { ArrowLeft, Clock3, FileVideo2 } from 'lucide-react'
+import { ArrowLeft, Check, Clock3, FileVideo2, Pencil, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 
 import AngleChart from '../components/AngleChart'
 import AnalysisSummary from '../components/AnalysisSummary'
 import MetricCard from '../components/MetricCard'
-import { getAnalysisHistory, getSavedAnalysis } from '../services/analysisHistory'
+import { getAnalysisHistory, getSavedAnalysis, renameSavedAnalysis } from '../services/analysisHistory'
 import { formatDuration, formatFileSize, formatNumber } from '../utils/formatters'
 
 const chartConfig = [
@@ -43,6 +43,9 @@ function Results() {
   const [selectedRecord, setSelectedRecord] = useState(null)
   const [isHistoryLoading, setIsHistoryLoading] = useState(true)
   const [error, setError] = useState('')
+  const [editingId, setEditingId] = useState('')
+  const [editName, setEditName] = useState('')
+  const [isSavingName, setIsSavingName] = useState(false)
 
   useEffect(() => {
     let isCurrent = true
@@ -114,6 +117,29 @@ function Results() {
       ]
     : []
 
+  function beginRename(record) {
+    setEditingId(record.id)
+    setEditName(record.displayName || record.filename)
+    setError('')
+  }
+
+  async function saveRename(record) {
+    setIsSavingName(true)
+    setError('')
+    try {
+      const displayName = await renameSavedAnalysis(record.id, editName)
+      setHistory((currentHistory) => currentHistory.map((item) => (
+        item.id === record.id ? { ...item, displayName } : item
+      )))
+      setEditingId('')
+      setEditName('')
+    } catch (renameError) {
+      setError(renameError.message || 'Could not rename this saved analysis.')
+    } finally {
+      setIsSavingName(false)
+    }
+  }
+
   return (
     <div className="page results-page">
       <section className="results-header">
@@ -139,27 +165,76 @@ function Results() {
           <p className="history-message" role="status">Loading saved analyses...</p>
         ) : history.length ? (
           <div className="history-list">
-            {history.map((record) => (
-              <button
-                key={record.id}
-                type="button"
-                className={`history-item ${record.id === selectedId ? 'selected' : ''}`}
-                onClick={() => setSelectedId(record.id)}
-                aria-pressed={record.id === selectedId}
-              >
-                <FileVideo2 size={20} />
-                <span className="history-item-copy">
-                  <strong>{record.filename}</strong>
-                  <small>
-                    <Clock3 size={13} />
-                    {new Date(record.createdAt).toLocaleString()}
-                  </small>
-                </span>
-                <span className="history-item-duration">
-                  {formatDuration(record.analysis?.video?.duration)}
-                </span>
-              </button>
-            ))}
+            {history.map((record) => {
+              const isEditing = editingId === record.id
+              return (
+                <div key={record.id} className={`history-item-row ${record.id === selectedId ? 'selected' : ''}`}>
+                  <button
+                    type="button"
+                    className="history-item"
+                    onClick={() => setSelectedId(record.id)}
+                    aria-pressed={record.id === selectedId}
+                  >
+                    <FileVideo2 size={20} />
+                    <span className="history-item-copy">
+                      <strong>{record.displayName || record.filename}</strong>
+                      <small>
+                        <Clock3 size={13} />
+                        {new Date(record.createdAt).toLocaleString()}
+                      </small>
+                    </span>
+                    <span className="history-item-duration">
+                      {formatDuration(record.analysis?.video?.duration)}
+                    </span>
+                  </button>
+                  {isEditing ? (
+                    <div className="history-actions">
+                      <input
+                        autoFocus
+                        aria-label="Analysis name"
+                        value={editName}
+                        maxLength={120}
+                        onChange={(event) => setEditName(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') saveRename(record)
+                          if (event.key === 'Escape') setEditingId('')
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="history-icon-button"
+                        aria-label="Save analysis name"
+                        title="Save name"
+                        disabled={isSavingName}
+                        onClick={() => saveRename(record)}
+                      >
+                        <Check size={17} />
+                      </button>
+                      <button
+                        type="button"
+                        className="history-icon-button"
+                        aria-label="Cancel rename"
+                        title="Cancel"
+                        disabled={isSavingName}
+                        onClick={() => setEditingId('')}
+                      >
+                        <X size={17} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="history-icon-button"
+                      aria-label={`Rename ${record.displayName || record.filename}`}
+                      title="Rename analysis"
+                      onClick={() => beginRename(record)}
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         ) : (
           <div className="history-empty">

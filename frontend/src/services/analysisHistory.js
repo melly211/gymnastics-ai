@@ -92,3 +92,26 @@ export async function getSavedAnalysis(id) {
 
   return { ...record, videoFile: video?.file ?? null }
 }
+
+export async function renameSavedAnalysis(id, displayName) {
+  const normalizedName = displayName.trim()
+  if (!normalizedName) {
+    throw new Error('Please enter a name for this analysis.')
+  }
+
+  const database = await openDatabase()
+  const transaction = database.transaction(ANALYSES_STORE, 'readwrite')
+  const store = transaction.objectStore(ANALYSES_STORE)
+  const complete = transactionComplete(transaction)
+  const record = await requestResult(store.get(id))
+
+  if (!record) {
+    await complete
+    throw new Error('This saved analysis could not be found in browser history.')
+  }
+
+  store.put({ ...record, displayName: normalizedName })
+  await complete
+
+  return normalizedName
+}

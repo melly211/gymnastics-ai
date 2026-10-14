@@ -428,23 +428,44 @@
   gap: 10px;
 }
 
+.history-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 8px;
+  border: 1px solid rgba(217, 70, 239, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.history-item-row:hover,
+.history-item-row.selected {
+  border-color: rgba(217, 70, 239, 0.48);
+  background: rgba(244, 114, 182, 0.1);
+}
+
 .history-item {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex: 1;
   width: 100%;
   padding: 14px 16px;
-  border: 1px solid rgba(217, 70, 239, 0.12);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.72);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
   color: #4a1d2d;
   text-align: left;
 }
 
-.history-item:hover,
-.history-item.selected {
-  border-color: rgba(217, 70, 239, 0.48);
-  background: rgba(244, 114, 182, 0.1);
+.history-item:hover {
+  background: transparent;
+}
+
+.history-item:focus-visible,
+.history-icon-button:focus-visible {
+  outline: 2px solid #be185d;
+  outline-offset: 2px;
 }
 
 .history-item-copy {
@@ -458,6 +479,53 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.history-item-copy input {
+  width: 100%;
+  min-width: 0;
+  padding: 4px 7px;
+  border: 1px solid rgba(217, 70, 239, 0.48);
+  border-radius: 7px;
+  color: #4a1d2d;
+}
+
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.history-actions input {
+  width: min(220px, 34vw);
+  min-width: 90px;
+  padding: 7px 9px;
+  border: 1px solid rgba(217, 70, 239, 0.48);
+  border-radius: 7px;
+  color: #4a1d2d;
+}
+
+.history-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(217, 70, 239, 0.2);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #6d4759;
+}
+
+.history-icon-button:hover:not(:disabled) {
+  color: #be185d;
+  background: #fff;
+}
+
+.history-icon-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .history-item-copy small {
