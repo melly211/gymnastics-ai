@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Target } from 'lucide-react'
 
 function AnalysisSummary({ summary, feedback }) {
   const stats = [
@@ -8,9 +8,9 @@ function AnalysisSummary({ summary, feedback }) {
       icon: CheckCircle2,
     },
     {
-      label: 'Avg visibility',
-      value: Number(summary?.average_visibility ?? 0).toFixed(2),
-      icon: Sparkles,
+      label: 'Pose accuracy',
+      value: `${(Number(summary?.average_visibility ?? 0) * 100).toFixed(1)}%`,
+      icon: Target,
     },
     {
       label: 'Movement range',
