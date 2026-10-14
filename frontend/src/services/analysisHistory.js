@@ -115,3 +115,14 @@ export async function renameSavedAnalysis(id, displayName) {
 
   return normalizedName
 }
+
+export async function deleteSavedAnalysis(id) {
+  const database = await openDatabase()
+  const transaction = database.transaction([ANALYSES_STORE, VIDEOS_STORE], 'readwrite')
+  const complete = transactionComplete(transaction)
+
+  transaction.objectStore(ANALYSES_STORE).delete(id)
+  transaction.objectStore(VIDEOS_STORE).delete(id)
+
+  await complete
+}

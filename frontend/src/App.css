@@ -523,6 +523,12 @@
   background: #fff;
 }
 
+.history-delete-button:hover:not(:disabled) {
+  color: #b91c1c;
+  border-color: rgba(185, 28, 28, 0.3);
+  background: #fff7f7;
+}
+
 .history-icon-button:disabled {
   cursor: wait;
   opacity: 0.6;

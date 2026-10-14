@@ -1,11 +1,16 @@
-import { ArrowLeft, Check, Clock3, FileVideo2, Pencil, X } from 'lucide-react'
+import { ArrowLeft, Check, Clock3, FileVideo2, Pencil, Trash2, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 
 import AngleChart from '../components/AngleChart'
 import AnalysisSummary from '../components/AnalysisSummary'
 import MetricCard from '../components/MetricCard'
-import { getAnalysisHistory, getSavedAnalysis, renameSavedAnalysis } from '../services/analysisHistory'
+import {
+  deleteSavedAnalysis,
+  getAnalysisHistory,
+  getSavedAnalysis,
+  renameSavedAnalysis,
+} from '../services/analysisHistory'
 import { formatDuration, formatFileSize, formatNumber } from '../utils/formatters'
 
 const chartConfig = [
@@ -46,6 +51,7 @@ function Results() {
   const [editingId, setEditingId] = useState('')
   const [editName, setEditName] = useState('')
   const [isSavingName, setIsSavingName] = useState(false)
+  const [deletingId, setDeletingId] = useState('')
 
   useEffect(() => {
     let isCurrent = true
@@ -140,6 +146,32 @@ function Results() {
     }
   }
 
+  async function deleteAnalysis(record) {
+    const name = record.displayName || record.filename
+    if (!window.confirm(`Delete "${name}" and its saved video? This cannot be undone.`)) {
+      return
+    }
+
+    setDeletingId(record.id)
+    setError('')
+    try {
+      await deleteSavedAnalysis(record.id)
+      const remainingHistory = history.filter((item) => item.id !== record.id)
+      setHistory(remainingHistory)
+      if (selectedId === record.id) {
+        setSelectedId(remainingHistory[0]?.id || '')
+      }
+      if (editingId === record.id) {
+        setEditingId('')
+        setEditName('')
+      }
+    } catch (deleteError) {
+      setError(deleteError.message || 'Could not delete this saved analysis.')
+    } finally {
+      setDeletingId('')
+    }
+  }
+
   return (
     <div className="page results-page">
       <section className="results-header">
@@ -222,15 +254,27 @@ function Results() {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      className="history-icon-button"
-                      aria-label={`Rename ${record.displayName || record.filename}`}
-                      title="Rename analysis"
-                      onClick={() => beginRename(record)}
-                    >
-                      <Pencil size={16} />
-                    </button>
+                    <div className="history-actions">
+                      <button
+                        type="button"
+                        className="history-icon-button"
+                        aria-label={`Rename ${record.displayName || record.filename}`}
+                        title="Rename analysis"
+                        onClick={() => beginRename(record)}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className="history-icon-button history-delete-button"
+                        aria-label={`Delete ${record.displayName || record.filename}`}
+                        title="Delete analysis"
+                        disabled={deletingId === record.id}
+                        onClick={() => deleteAnalysis(record)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   )}
                 </div>
               )
