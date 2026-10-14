@@ -1,6 +1,16 @@
 import { ArrowRight, BarChart3, Camera, Gauge, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import yogaBalanceImage from '../assets/yoga-balance.jpg'
+import yogaFlowImage from '../assets/yoga-flow.jpg'
+import yogaPracticeImage from '../assets/yoga-practice.jpg'
+
+const yogaImages = [
+  { src: yogaFlowImage, alt: 'Acrobatic gymnasts balancing together against a pink background', title: 'Acro strength and coordination' },
+  { src: yogaBalanceImage, alt: 'Yoga practitioner stretching in a bright white studio', title: 'Build balance and flexibility' },
+  { src: yogaPracticeImage, alt: 'Yoga practitioner holding a shoulder stand in a blush-toned studio', title: 'Find your flow' },
+]
+
 const featureCards = [
   {
     icon: Camera,
@@ -61,6 +71,21 @@ function Home() {
             <span className="mini-label">Tempo</span>
             <strong>Stable</strong>
           </div>
+        </div>
+      </section>
+
+      <section className="yoga-gallery" aria-labelledby="yoga-gallery-heading">
+        <div className="yoga-gallery-heading">
+          <p className="eyebrow">Yoga &amp; gymnastics</p>
+          <h2 id="yoga-gallery-heading">Strength, balance, and flexibility in motion</h2>
+        </div>
+        <div className="yoga-gallery-grid">
+          {yogaImages.map(({ src, alt, title }) => (
+            <figure key={title} className="yoga-photo-card">
+              <img src={src} alt={alt} loading="lazy" />
+              <figcaption>{title}</figcaption>
+            </figure>
+          ))}
         </div>
       </section>
 

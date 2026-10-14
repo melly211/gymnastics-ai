@@ -279,6 +279,49 @@
   color: #4a1d2d;
 }
 
+.yoga-gallery {
+  display: grid;
+  gap: 20px;
+}
+
+.yoga-gallery-heading h2 {
+  max-width: 680px;
+  color: #4a1d2d;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  line-height: 1.2;
+}
+
+.yoga-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.yoga-photo-card {
+  overflow: hidden;
+  border: 1px solid rgba(217, 70, 239, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 14px 32px rgba(190, 24, 93, 0.08);
+}
+
+.yoga-photo-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.yoga-photo-card:hover img {
+  transform: scale(1.035);
+}
+
+.yoga-photo-card figcaption {
+  padding: 16px 18px;
+  color: #4a1d2d;
+  font-weight: 700;
+}
+
 .upload-panel {
   padding: 28px;
 }
@@ -758,6 +801,7 @@
 @media (max-width: 900px) {
   .feature-grid,
   .workflow-steps,
+  .yoga-gallery-grid,
   .stats-grid,
   .chart-grid,
   .summary-grid {
@@ -799,6 +843,7 @@
 
   .feature-grid,
   .workflow-steps,
+  .yoga-gallery-grid,
   .stats-grid,
   .chart-grid,
   .summary-grid {
