@@ -1,14 +1,14 @@
 import { ArrowRight, BarChart3, Camera, Gauge, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-import yogaBalanceImage from '../assets/yoga-balance.jpg'
-import yogaFlowImage from '../assets/yoga-flow.jpg'
-import yogaPracticeImage from '../assets/yoga-practice.jpg'
+import yogaBalanceImage from '../assets/yoga-balance.png'
+import yogaFlowImage from '../assets/yoga-flow.png'
+import yogaPracticeImage from '../assets/yoga-practice.png'
 
 const yogaImages = [
-  { src: yogaFlowImage, alt: 'Acrobatic gymnasts balancing together against a pink background', title: 'Acro strength and coordination' },
-  { src: yogaBalanceImage, alt: 'Yoga practitioner stretching in a bright white studio', title: 'Build balance and flexibility' },
-  { src: yogaPracticeImage, alt: 'Yoga practitioner holding a shoulder stand in a blush-toned studio', title: 'Find your flow' },
+  { src: yogaFlowImage, alt: 'Gymnast in a pink leotard holding an arched floor pose against a white backdrop', title: 'Strength and flexibility' },
+  { src: yogaBalanceImage, alt: 'Gymnast in pink performing a backbend on a light outdoor surface', title: 'Build balance and control' },
+  { src: yogaPracticeImage, alt: 'Athlete in pink activewear stretching with one leg raised in a bright studio', title: 'Train with intention' },
 ]
 
 const featureCards = [
