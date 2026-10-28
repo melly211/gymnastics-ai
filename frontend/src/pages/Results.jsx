@@ -2,7 +2,6 @@ import { ArrowLeft, Check, CheckCircle2, Clock3, FileText, FileVideo2, Pencil, S
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
 
 import AngleChart from '../components/AngleChart'
 import AnalysisSummary from '../components/AnalysisSummary'
@@ -42,6 +41,55 @@ function SavedVideo({ file }) {
 
 function formatJointLabel(key) {
   return key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase()).trim()
+}
+
+function reportText(value) {
+  if (typeof value === 'string') return value
+  if (value === null || value === undefined) return ''
+  return JSON.stringify(value)
+}
+
+function reportTextList(value) {
+  return Array.isArray(value) ? value.map(reportText).filter(Boolean) : []
+}
+
+function reportFeedbackList(value) {
+  if (!Array.isArray(value)) return []
+  return value.filter((item) => typeof item === 'string' || (item && typeof item === 'object'))
+}
+
+function addPdfParagraph(document, text, y, options = {}) {
+  const { fontSize = 10, indent = 40, lineHeight = 14 } = options
+  const lines = document.splitTextToSize(String(text || ''), 515 - (indent - 40))
+  const requiredHeight = lines.length * lineHeight
+
+  if (y + requiredHeight > 790) {
+    document.addPage()
+    y = 48
+  }
+
+  document.setFontSize(fontSize)
+  document.text(lines, indent, y)
+  return y + requiredHeight + 5
+}
+
+function addPdfSection(document, title, items, y) {
+  if (!items.length) return y
+
+  if (y > 760) {
+    document.addPage()
+    y = 48
+  }
+
+  document.setFontSize(13)
+  document.text(title, 40, y)
+  y += 20
+
+  for (const item of items) {
+    y = addPdfParagraph(document, `• ${item}`, y, { indent: 48 })
+  }
+
+  return y + 8
 }
 
 function Results() {
@@ -213,33 +261,42 @@ function Results() {
     document.setFontSize(22)
     document.text('Gymnastics Movement Analysis Report', 40, 52)
     document.setFontSize(11)
-    document.text(`${video.filename || 'Uploaded video'} • ${formatDuration(video.duration)} • ${video.width || 0} × ${video.height || 0}`, 40, 78)
-    document.text(`Frames analyzed: ${video.analyzedFrames || 0} • Detection coverage: ${formatNumber(summary.pose_detected_percentage || 0, 1)}%`, 40, 96)
+    let y = addPdfParagraph(
+      document,
+      `${video.filename || 'Uploaded video'} • ${formatDuration(video.duration)} • ${video.width || 0} × ${video.height || 0}`,
+      78,
+    )
 
-    const jointTable = Object.entries(joints).map(([key, metric]) => [
-      formatJointLabel(key),
-      formatNumber(metric.min, 1),
-      formatNumber(metric.max, 1),
-      formatNumber(metric.average, 1),
-      formatNumber(metric.range, 1),
-    ])
+    y = addPdfSection(document, 'Report summary', aiReport?.summary ? [reportText(aiReport.summary)] : [], y + 4)
+    y = addPdfSection(document, 'What went well', reportTextList(aiReport?.what_went_well), y)
 
-    autoTable(document, {
-      startY: 120,
-      head: [['Joint', 'Min°', 'Max°', 'Avg°', 'Range°']],
-      body: jointTable,
-      theme: 'grid',
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [168, 85, 247] },
+    const coachingItems = reportFeedbackList(aiReport?.coaching_feedback).map((item) => {
+      if (typeof item === 'string') return item
+      return [
+        reportText(item.focus),
+        reportText(item.what_measurements_suggest),
+        item.try_this ? `Try this: ${reportText(item.try_this)}` : '',
+      ].filter(Boolean).join(' — ')
     })
+    y = addPdfSection(document, 'Coaching feedback', coachingItems, y)
+    y = addPdfSection(document, 'Practice focus', reportTextList(aiReport?.practice_focus), y)
+    y = addPdfSection(document, 'Tracking note', aiReport?.tracking_note ? [reportText(aiReport.tracking_note)] : [], y)
+    y = addPdfSection(document, 'Measured observations', analysis.observations || [], y)
 
-    const observationLines = analysis.observations || []
-    const endY = document.lastAutoTable.finalY + 18
-    document.text('Observations', 40, endY)
-    document.setFontSize(10)
-    observationLines.forEach((line, index) => {
-      document.text(`${index + 1}. ${line}`, 52, endY + 18 + index * 16)
-    })
+    if (!aiReport) {
+      addPdfParagraph(
+        document,
+        'Generate an AI report in the results dashboard for personalized, action-oriented coaching feedback.',
+        y + 4,
+      )
+    }
+
+    addPdfParagraph(
+      document,
+      'Educational movement feedback only. Review practice ideas with a qualified gymnastics coach; this report is not a medical assessment.',
+      y + 8,
+      { fontSize: 9 },
+    )
 
     document.save(`${fileStem}-report.pdf`)
   }
@@ -563,13 +620,57 @@ function Results() {
               </div>
 
               <div className="ai-report-box">
-                <p>{typeof aiReport.summary === 'string' ? aiReport.summary : JSON.stringify(aiReport.summary || aiReport, null, 2)}</p>
-                {Array.isArray(aiReport.review_points) && aiReport.review_points.length ? (
-                  <ul>
-                    {aiReport.review_points.map((point) => (
-                      <li key={point}>{point}</li>
-                    ))}
-                  </ul>
+                {reportText(aiReport.summary) ? (
+                  <section className="ai-report-section">
+                    <h4>Summary</h4>
+                    <p>{reportText(aiReport.summary)}</p>
+                  </section>
+                ) : null}
+
+                {reportTextList(aiReport.what_went_well).length ? (
+                  <section className="ai-report-section">
+                    <h4>What went well</h4>
+                    <ul>{reportTextList(aiReport.what_went_well).map((point, index) => <li key={`${point}-${index}`}>{point}</li>)}</ul>
+                  </section>
+                ) : null}
+
+                {reportFeedbackList(aiReport.coaching_feedback).length ? (
+                  <section className="ai-report-section">
+                    <h4>Coaching feedback</h4>
+                    <div className="coaching-feedback-list">
+                      {reportFeedbackList(aiReport.coaching_feedback).map((item, index) => (
+                        <article key={`${item.focus || 'feedback'}-${index}`} className="coaching-feedback-item">
+                          {typeof item === 'string' ? (
+                            <p>{item}</p>
+                          ) : (
+                            <>
+                              <h5>{reportText(item.focus) || 'Movement focus'}</h5>
+                              {reportText(item.what_measurements_suggest) ? <p>{reportText(item.what_measurements_suggest)}</p> : null}
+                              {reportText(item.try_this) ? <p><strong>Try this:</strong> {reportText(item.try_this)}</p> : null}
+                            </>
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
+                {reportTextList(aiReport.practice_focus).length ? (
+                  <section className="ai-report-section">
+                    <h4>Practice focus</h4>
+                    <ul>{reportTextList(aiReport.practice_focus).map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul>
+                  </section>
+                ) : null}
+
+                {reportText(aiReport.tracking_note) ? (
+                  <section className="ai-report-section tracking-note">
+                    <h4>Tracking note</h4>
+                    <p>{reportText(aiReport.tracking_note)}</p>
+                  </section>
+                ) : null}
+
+                {!reportText(aiReport.summary) && !reportTextList(aiReport.what_went_well).length && !reportFeedbackList(aiReport.coaching_feedback).length && !reportTextList(aiReport.practice_focus).length ? (
+                  <p>{reportText(aiReport.raw) || reportTextList(aiReport.review_points).join(' ') || 'The report did not include any narrative feedback.'}</p>
                 ) : null}
               </div>
             </section>

@@ -789,10 +789,48 @@
 
 .ai-report-box ul,
 .observations-box ul {
-  margin: 14px 0 0;
+  margin: 8px 0 0;
   padding-left: 18px;
   color: #6d4759;
   line-height: 1.7;
+}
+
+.ai-report-section + .ai-report-section {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(217, 70, 239, 0.14);
+}
+
+.ai-report-section h4 {
+  margin: 0 0 10px;
+  color: #4a1d2d;
+  font-size: 1rem;
+}
+
+.coaching-feedback-list {
+  display: grid;
+  gap: 12px;
+}
+
+.coaching-feedback-item {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(217, 70, 239, 0.1);
+}
+
+.coaching-feedback-item h5 {
+  margin: 0 0 8px;
+  color: #7a2f53;
+  font-size: 0.95rem;
+}
+
+.coaching-feedback-item p + p {
+  margin-top: 8px;
+}
+
+.tracking-note {
+  color: #6d4759;
 }
 
 .observations-box {
