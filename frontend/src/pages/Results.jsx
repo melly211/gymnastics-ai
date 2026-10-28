@@ -274,11 +274,8 @@ function Results() {
     document.setFontSize(10)
     document.text(video.filename || 'Uploaded video', 50, 82)
     document.setTextColor(246, 202, 223)
-    document.text(
-      `${formatDuration(video.duration)}   |   ${video.width || 0} x ${video.height || 0}`,
-      50,
-      102,
-    )
+    document.text(`Movement: ${video.movementType || 'Not specified'}`, 50, 98)
+    document.text(`${formatDuration(video.duration)}   |   ${video.width || 0} x ${video.height || 0}`, 50, 114)
     let y = 148
 
     y = addPdfSection(document, 'REPORT SUMMARY', aiReport?.summary ? [reportText(aiReport.summary)] : [], y)
@@ -505,6 +502,11 @@ function Results() {
                 <span>Filename</span>
                 <strong>{video.filename || 'Unknown'}</strong>
                 <small>Uploaded file</small>
+              </div>
+              <div className="stat-row">
+                <span>Movement type</span>
+                <strong>{video.movementType || 'Not specified'}</strong>
+                <small>User-selected category</small>
               </div>
               <div className="stat-row">
                 <span>Pose detection coverage</span>

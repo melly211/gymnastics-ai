@@ -15,9 +15,21 @@ const ACCEPTED_TYPES = [
   'video/x-msvideo',
 ]
 
+const MOVEMENT_TYPES = [
+  'Acrobatics & tumbling',
+  'Jumps & leaps',
+  'Turns & pivots',
+  'Balances & holds',
+  'Yoga poses & transitions',
+  'Flexibility & stretching',
+  'Other',
+]
+
 function Analyze() {
   const navigate = useNavigate()
   const [selectedFile, setSelectedFile] = useState(null)
+  const [movementType, setMovementType] = useState(MOVEMENT_TYPES[0])
+  const [customMovementType, setCustomMovementType] = useState('')
   const [previewUrl, setPreviewUrl] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -91,10 +103,17 @@ function Analyze() {
     setStatusText('Initializing pose tracker...')
 
     try {
-      const result = await analyzeVideo(selectedFile, ({ progress: nextProgress, message }) => {
-        setProgress(nextProgress)
-        setStatusText(message || 'Analyzing video...')
-      })
+      const selectedMovementType = movementType === 'Other'
+        ? customMovementType.trim() || 'Other'
+        : movementType
+      const result = await analyzeVideo(
+        selectedFile,
+        ({ progress: nextProgress, message }) => {
+          setProgress(nextProgress)
+          setStatusText(message || 'Analyzing video...')
+        },
+        selectedMovementType,
+      )
 
       let historyId
       try {
@@ -122,6 +141,32 @@ function Analyze() {
             <p className="eyebrow">Upload</p>
             <h3>Upload Your Gymnastics Video</h3>
           </div>
+        </div>
+
+        <div className="movement-type-field">
+          <label htmlFor="movement-type">What type of movement are you analyzing?</label>
+          <select
+            id="movement-type"
+            value={movementType}
+            disabled={isLoading}
+            onChange={(event) => setMovementType(event.target.value)}
+          >
+            {MOVEMENT_TYPES.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+          {movementType === 'Other' ? (
+            <input
+              type="text"
+              value={customMovementType}
+              disabled={isLoading}
+              maxLength={60}
+              placeholder="Describe the movement (optional)"
+              aria-label="Custom movement type"
+              onChange={(event) => setCustomMovementType(event.target.value)}
+            />
+          ) : null}
+          <p>This helps tailor the report. The video is still measured using the same pose tracking.</p>
         </div>
 
         <div

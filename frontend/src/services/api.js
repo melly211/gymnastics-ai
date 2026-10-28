@@ -188,7 +188,7 @@ function buildObservations(metadata) {
   return observations.length ? observations : ['Pose landmarks were detected and joint angles were calculated across the analyzed sequence.']
 }
 
-export async function analyzeVideo(file, onProgress) {
+export async function analyzeVideo(file, onProgress, movementType = '') {
   if (!file) {
     throw new Error('Please choose a video before analyzing.')
   }
@@ -321,6 +321,7 @@ export async function analyzeVideo(file, onProgress) {
   const analysis = {
     video: {
       filename: file.name,
+      movementType,
       duration,
       width,
       height,
