@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Clock3, FileText, FileVideo2, Pencil, Sparkles, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Check, CheckCircle2, Clock3, FileText, FileVideo2, Pencil, Sparkles, Trash2, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { jsPDF } from 'jspdf'
@@ -188,6 +188,7 @@ function Results() {
     }
 
     setIsGeneratingAi(true)
+    setAiReport(null)
     setError('')
 
     try {
@@ -387,6 +388,13 @@ function Results() {
               Download PDF Report
             </button>
           </div>
+
+          {aiReport && !isGeneratingAi ? (
+            <div className="success-message" role="status" aria-live="polite">
+              <CheckCircle2 size={19} />
+              <span>AI report is ready below.</span>
+            </div>
+          ) : null}
 
           {!deepseekConfigured ? (
             <div className="info-message">DeepSeek API key is not configured.</div>
