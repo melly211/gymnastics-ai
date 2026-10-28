@@ -1,6 +1,8 @@
-import { ArrowLeft, Check, Clock3, FileVideo2, Pencil, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Check, Clock3, FileText, FileVideo2, Pencil, Sparkles, Trash2, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 import AngleChart from '../components/AngleChart'
 import AnalysisSummary from '../components/AnalysisSummary'
@@ -11,15 +13,13 @@ import {
   getSavedAnalysis,
   renameSavedAnalysis,
 } from '../services/analysisHistory'
+import { generateMovementInterpretation } from '../services/deepseekApi'
 import { formatDuration, formatFileSize, formatNumber } from '../utils/formatters'
 
 const chartConfig = [
-  { key: 'leftKnee', title: 'Left Knee', color: '#60a5fa' },
-  { key: 'rightKnee', title: 'Right Knee', color: '#f472b6' },
-  { key: 'leftHip', title: 'Left Hip', color: '#34d399' },
-  { key: 'rightHip', title: 'Right Hip', color: '#fbbf24' },
-  { key: 'leftElbow', title: 'Left Elbow', color: '#a78bfa' },
-  { key: 'rightElbow', title: 'Right Elbow', color: '#f87171' },
+  { title: 'Knee Angle Over Time', leftKey: 'leftKnee', rightKey: 'rightKnee', leftColor: '#60a5fa', rightColor: '#f472b6' },
+  { title: 'Hip Angle Over Time', leftKey: 'leftHip', rightKey: 'rightHip', leftColor: '#34d399', rightColor: '#fbbf24' },
+  { title: 'Elbow Angle Over Time', leftKey: 'leftElbow', rightKey: 'rightElbow', leftColor: '#a78bfa', rightColor: '#f87171' },
 ]
 
 function SavedVideo({ file }) {
@@ -40,6 +40,10 @@ function SavedVideo({ file }) {
   return <video ref={videoRef} className="saved-video" controls />
 }
 
+function formatJointLabel(key) {
+  return key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase()).trim()
+}
+
 function Results() {
   const location = useLocation()
   const preferredHistoryId = location.state?.historyId
@@ -52,6 +56,9 @@ function Results() {
   const [editName, setEditName] = useState('')
   const [isSavingName, setIsSavingName] = useState(false)
   const [deletingId, setDeletingId] = useState('')
+  const [aiReport, setAiReport] = useState(null)
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false)
+  const deepseekConfigured = Boolean(import.meta.env.VITE_DEEPSEEK_API_KEY)
 
   useEffect(() => {
     let isCurrent = true
@@ -112,7 +119,9 @@ function Results() {
   const summary = analysis?.summary || {}
   const joints = analysis?.joints || {}
   const symmetry = analysis?.symmetry || {}
+  const movement = analysis?.movement || {}
   const frames = analysis?.frames || []
+  const observations = analysis?.observations || []
 
   const angleCards = analysis
     ? [
@@ -170,6 +179,68 @@ function Results() {
     } finally {
       setDeletingId('')
     }
+  }
+
+  async function handleGenerateAiReport() {
+    if (!analysis) {
+      setError('An analysis is required before generating a DeepSeek report.')
+      return
+    }
+
+    setIsGeneratingAi(true)
+    setError('')
+
+    try {
+      const report = await generateMovementInterpretation(analysis)
+      setAiReport(report)
+    } catch (generateError) {
+      setAiReport(null)
+      setError(generateError.message || 'The DeepSeek report could not be generated.')
+    } finally {
+      setIsGeneratingAi(false)
+    }
+  }
+
+  function handleDownloadPdf() {
+    if (!analysis) {
+      return
+    }
+
+    const document = new jsPDF({ unit: 'pt', format: 'a4' })
+    const fileStem = (video.filename || 'gymnastics-analysis').replace(/\.[^/.]+$/, '')
+
+    document.setFontSize(22)
+    document.text('Gymnastics Movement Analysis Report', 40, 52)
+    document.setFontSize(11)
+    document.text(`${video.filename || 'Uploaded video'} • ${formatDuration(video.duration)} • ${video.width || 0} × ${video.height || 0}`, 40, 78)
+    document.text(`Frames analyzed: ${video.analyzedFrames || 0} • Detection coverage: ${formatNumber(summary.pose_detected_percentage || 0, 1)}%`, 40, 96)
+
+    const jointTable = Object.entries(joints).map(([key, metric]) => [
+      formatJointLabel(key),
+      formatNumber(metric.min, 1),
+      formatNumber(metric.max, 1),
+      formatNumber(metric.average, 1),
+      formatNumber(metric.range, 1),
+    ])
+
+    autoTable(document, {
+      startY: 120,
+      head: [['Joint', 'Min°', 'Max°', 'Avg°', 'Range°']],
+      body: jointTable,
+      theme: 'grid',
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [168, 85, 247] },
+    })
+
+    const observationLines = analysis.observations || []
+    const endY = document.lastAutoTable.finalY + 18
+    document.text('Observations', 40, endY)
+    document.setFontSize(10)
+    observationLines.forEach((line, index) => {
+      document.text(`${index + 1}. ${line}`, 52, endY + 18 + index * 16)
+    })
+
+    document.save(`${fileStem}-report.pdf`)
   }
 
   return (
@@ -301,16 +372,33 @@ function Results() {
 
       {analysis ? (
         <>
+          <div className="report-actions">
+            <button
+              type="button"
+              className="primary-button"
+              disabled={!deepseekConfigured || isGeneratingAi}
+              onClick={handleGenerateAiReport}
+            >
+              <Sparkles size={18} />
+              {isGeneratingAi ? 'Generating AI Report...' : 'Generate AI Report'}
+            </button>
+            <button type="button" className="secondary-button" onClick={handleDownloadPdf}>
+              <FileText size={18} />
+              Download PDF Report
+            </button>
+          </div>
+
+          {!deepseekConfigured ? (
+            <div className="info-message">DeepSeek API key is not configured.</div>
+          ) : null}
+
           <div className="stats-grid">
             {angleCards.map((card) => (
               <MetricCard key={card.label} label={card.label} value={card.value} detail={card.detail} />
             ))}
           </div>
 
-          <AnalysisSummary
-            summary={summary}
-            feedback={analysis.observations || []}
-          />
+          <AnalysisSummary summary={summary} feedback={observations} />
 
           {displayedRecord.videoFile ? (
             <section className="panel saved-video-panel">
@@ -328,18 +416,60 @@ function Results() {
           <section className="panel stats-panel">
             <div className="panel-header">
               <div>
-                <p className="eyebrow">Joint metrics</p>
-                <h3>Angle statistics</h3>
+                <p className="eyebrow">Video information</p>
+                <h3>Movement overview</h3>
+              </div>
+            </div>
+
+            <div className="stats-list compact-grid">
+              <div className="stat-row">
+                <span>Filename</span>
+                <strong>{video.filename || 'Unknown'}</strong>
+                <small>Uploaded file</small>
+              </div>
+              <div className="stat-row">
+                <span>Pose detection coverage</span>
+                <strong>{formatNumber(summary.pose_detected_percentage || 0, 1)}%</strong>
+                <small>Tracked frames</small>
+              </div>
+              <div className="stat-row">
+                <span>Average landmark visibility</span>
+                <strong>{formatNumber((summary.average_visibility || 0) * 100, 1)}%</strong>
+                <small>Detection reliability</small>
+              </div>
+              <div className="stat-row">
+                <span>Frames analyzed</span>
+                <strong>{formatNumber(video.analyzedFrames || 0, 0)}</strong>
+                <small>Sampled frames</small>
+              </div>
+              <div className="stat-row">
+                <span>Movement duration</span>
+                <strong>{formatDuration(video.duration || 0)}</strong>
+                <small>Video length</small>
+              </div>
+              <div className="stat-row">
+                <span>Resolution</span>
+                <strong>{video.width && video.height ? `${video.width}×${video.height}` : 'Unknown'}</strong>
+                <small>Frame size</small>
+              </div>
+            </div>
+          </section>
+
+          <section className="panel stats-panel">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">Joint summary</p>
+                <h3>Range of motion</h3>
               </div>
             </div>
 
             <div className="stats-list">
               {Object.entries(joints).map(([key, metric]) => (
                 <div key={key} className="stat-row">
-                  <span>{key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase()).trim()}</span>
+                  <span>{formatJointLabel(key)}</span>
                   <strong>{formatNumber(metric.average, 1)}° avg</strong>
                   <small>
-                    {formatNumber(metric.min, 1)}° to {formatNumber(metric.max, 1)}°
+                    {formatNumber(metric.min, 1)}° to {formatNumber(metric.max, 1)}° • {formatNumber(metric.range, 1)}° range
                   </small>
                 </div>
               ))}
@@ -356,26 +486,115 @@ function Results() {
 
             <div className="stats-list">
               <div className="stat-row">
-                <span>Knee asymmetry</span>
+                <span>Knee difference</span>
                 <strong>{formatNumber(symmetry.kneeAverageDifference, 1)}°</strong>
                 <small>Average bilateral gap</small>
               </div>
               <div className="stat-row">
-                <span>Hip asymmetry</span>
+                <span>Hip difference</span>
                 <strong>{formatNumber(symmetry.hipAverageDifference, 1)}°</strong>
                 <small>Average bilateral gap</small>
               </div>
               <div className="stat-row">
-                <span>Elbow asymmetry</span>
+                <span>Elbow difference</span>
                 <strong>{formatNumber(symmetry.elbowAverageDifference, 1)}°</strong>
                 <small>Average bilateral gap</small>
               </div>
             </div>
           </section>
 
+          <section className="panel stats-panel">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">Movement metrics</p>
+                <h3>Core movement indicators</h3>
+              </div>
+            </div>
+
+            <div className="stats-list compact-grid">
+              <div className="stat-row">
+                <span>Torso lean minimum</span>
+                <strong>{formatNumber(movement.torsoLeanMin || 0, 1)}°</strong>
+                <small>Minimum lean</small>
+              </div>
+              <div className="stat-row">
+                <span>Torso lean maximum</span>
+                <strong>{formatNumber(movement.torsoLeanMax || 0, 1)}°</strong>
+                <small>Maximum lean</small>
+              </div>
+              <div className="stat-row">
+                <span>Torso lean range</span>
+                <strong>{formatNumber(movement.torsoLeanRange || 0, 1)}°</strong>
+                <small>Lean variation</small>
+              </div>
+              <div className="stat-row">
+                <span>Tracking coverage</span>
+                <strong>{formatNumber(summary.pose_detected_percentage || 0, 1)}%</strong>
+                <small>Frame coverage</small>
+              </div>
+              <div className="stat-row">
+                <span>Movement duration</span>
+                <strong>{formatDuration(video.duration || 0)}</strong>
+                <small>Video length</small>
+              </div>
+              <div className="stat-row">
+                <span>Observation count</span>
+                <strong>{observations.length}</strong>
+                <small>Detected patterns</small>
+              </div>
+            </div>
+          </section>
+
+          {aiReport ? (
+            <section className="panel ai-panel">
+              <div className="panel-header">
+                <div>
+                  <p className="eyebrow">AI interpretation</p>
+                  <h3>DeepSeek movement analysis</h3>
+                </div>
+              </div>
+
+              <div className="ai-report-box">
+                <p>{typeof aiReport.summary === 'string' ? aiReport.summary : JSON.stringify(aiReport.summary || aiReport, null, 2)}</p>
+                {Array.isArray(aiReport.review_points) && aiReport.review_points.length ? (
+                  <ul>
+                    {aiReport.review_points.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+
+          <section className="panel stats-panel">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">Observations</p>
+                <h3>Deterministic findings</h3>
+              </div>
+            </div>
+
+            <div className="observations-box">
+              <ul>
+                {observations.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </section>
+
           <div className="chart-grid">
-            {chartConfig.map(({ key, title, color }) => (
-              <AngleChart key={key} title={title} data={frames} angleKey={key} color={color} />
+            {chartConfig.map(({ title, leftKey, rightKey, leftColor, rightColor }) => (
+              <AngleChart
+                key={title}
+                title={title}
+                data={frames}
+                leftKey={leftKey}
+                rightKey={rightKey}
+                leftColor={leftColor}
+                rightColor={rightColor}
+              />
             ))}
           </div>
 

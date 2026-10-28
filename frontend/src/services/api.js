@@ -108,6 +108,46 @@ function buildFrameAngles(landmarks) {
   return angles
 }
 
+function calculateVectorAngle(vectorA, vectorB) {
+  const dot = vectorA.x * vectorB.x + vectorA.y * vectorB.y
+  const magnitudeA = Math.hypot(vectorA.x, vectorA.y)
+  const magnitudeB = Math.hypot(vectorB.x, vectorB.y)
+
+  if (!magnitudeA || !magnitudeB) {
+    return 0
+  }
+
+  const cosine = Math.max(-1, Math.min(1, dot / (magnitudeA * magnitudeB)))
+  return (Math.acos(cosine) * 180) / Math.PI
+}
+
+function calculateTorsoLean(landmarks) {
+  const leftShoulder = getLandmarkPosition(landmarks, 'LEFT_SHOULDER')
+  const leftHip = getLandmarkPosition(landmarks, 'LEFT_HIP')
+  const rightShoulder = getLandmarkPosition(landmarks, 'RIGHT_SHOULDER')
+  const rightHip = getLandmarkPosition(landmarks, 'RIGHT_HIP')
+
+  const leftAngle = leftShoulder && leftHip
+    ? calculateVectorAngle(
+        { x: leftShoulder.x - leftHip.x, y: leftShoulder.y - leftHip.y },
+        { x: 0, y: -1 },
+      )
+    : null
+
+  const rightAngle = rightShoulder && rightHip
+    ? calculateVectorAngle(
+        { x: rightShoulder.x - rightHip.x, y: rightShoulder.y - rightHip.y },
+        { x: 0, y: -1 },
+      )
+    : null
+
+  return {
+    left: leftAngle,
+    right: rightAngle,
+    average: average([leftAngle ?? 0, rightAngle ?? 0].filter((value) => Number.isFinite(value))),
+  }
+}
+
 function buildObservations(metadata) {
   const observations = []
   const { joints, symmetry, detectionPercentage } = metadata
@@ -116,12 +156,17 @@ function buildObservations(metadata) {
   if (kneeDifference < 8) {
     observations.push('Left and right knee movement was relatively symmetrical.')
   } else if (kneeDifference > 15) {
-    observations.push('Noticeable difference detected between left and right knee movement.')
+    observations.push('Noticeable left-right difference was detected in knee movement.')
   }
 
   const hipDifference = symmetry.hipAverageDifference ?? 0
   if (hipDifference > 10) {
     observations.push('Hip alignment differences were present across the analyzed sequence.')
+  }
+
+  const elbowDifference = symmetry.elbowAverageDifference ?? 0
+  if (elbowDifference > 12) {
+    observations.push('Elbow movement showed measurable asymmetry between sides.')
   }
 
   const leftKneeMin = joints.leftKnee?.min ?? 0
@@ -137,7 +182,7 @@ function buildObservations(metadata) {
   }
 
   if (detectionPercentage < 70) {
-    observations.push('Pose tracking was limited. Use a video where the athlete remains fully visible throughout the movement.')
+    observations.push('Pose tracking quality was limited. Use a video where the full body remains visible for more reliable measurements.')
   }
 
   return observations.length ? observations : ['Pose landmarks were detected and joint angles were calculated across the analyzed sequence.']
@@ -206,10 +251,13 @@ export async function analyzeVideo(file, onProgress) {
         detectedFrames += 1
       }
 
+      const torsoLean = calculateTorsoLean(landmarks)
+
       frames.push({
         time: Number(timestamp.toFixed(2)),
         visibility: frameVisibility,
         angles,
+        torsoLean,
       })
     }
 
@@ -267,6 +315,8 @@ export async function analyzeVideo(file, onProgress) {
   const detectionPercentage = (detectedFrames / frames.length) * 100
   const averageVisibilityScore = average(visibilityValues)
   const movementRange = average(Object.values(joints).map((joint) => joint.range))
+  const torsoLeanValues = frames.map((frame) => frame.torsoLean?.average).filter((value) => Number.isFinite(value))
+  const torsoLeanSummary = summarizeAngles(torsoLeanValues)
 
   const analysis = {
     video: {
@@ -281,17 +331,34 @@ export async function analyzeVideo(file, onProgress) {
       detectedFrames,
       detectionPercentage,
       averageVisibility: averageVisibilityScore,
+      framesAnalyzed: frames.length,
+      videoDuration: duration,
     },
     joints,
     symmetry,
+    movement: {
+      torsoLeanMin: torsoLeanSummary.min,
+      torsoLeanMax: torsoLeanSummary.max,
+      torsoLeanRange: torsoLeanSummary.range,
+      duration,
+      coverage: detectionPercentage,
+    },
     frames: frames.map((frame) => ({
       time: frame.time,
       angles: frame.angles,
+      torsoLean: frame.torsoLean,
     })),
     summary: {
       pose_detected_percentage: detectionPercentage,
       average_visibility: averageVisibilityScore,
       movement_range: movementRange > 60 ? 'wide' : movementRange > 30 ? 'moderate' : 'limited',
+      coverage: detectionPercentage,
+      average_visibility_percentage: averageVisibilityScore * 100,
+      movement_duration: duration,
+      torso_lean_range: torsoLeanSummary.range,
+      left_right_knee_difference: symmetry.kneeAverageDifference,
+      left_right_hip_difference: symmetry.hipAverageDifference,
+      left_right_elbow_difference: symmetry.elbowAverageDifference,
     },
     observations: buildObservations({
       joints,

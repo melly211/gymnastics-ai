@@ -1,19 +1,31 @@
 export const JOINT_KEYS = [
-  'leftKnee',
-  'rightKnee',
-  'leftHip',
-  'rightHip',
+  'leftShoulder',
+  'rightShoulder',
   'leftElbow',
   'rightElbow',
+  'leftWrist',
+  'rightWrist',
+  'leftHip',
+  'rightHip',
+  'leftKnee',
+  'rightKnee',
+  'leftAnkle',
+  'rightAnkle',
 ]
 
 export const JOINT_DEFINITIONS = {
-  leftKnee: { a: 'LEFT_HIP', b: 'LEFT_KNEE', c: 'LEFT_ANKLE' },
-  rightKnee: { a: 'RIGHT_HIP', b: 'RIGHT_KNEE', c: 'RIGHT_ANKLE' },
-  leftHip: { a: 'LEFT_SHOULDER', b: 'LEFT_HIP', c: 'LEFT_KNEE' },
-  rightHip: { a: 'RIGHT_SHOULDER', b: 'RIGHT_HIP', c: 'RIGHT_KNEE' },
+  leftShoulder: { a: 'LEFT_HIP', b: 'LEFT_SHOULDER', c: 'LEFT_ELBOW' },
+  rightShoulder: { a: 'RIGHT_HIP', b: 'RIGHT_SHOULDER', c: 'RIGHT_ELBOW' },
   leftElbow: { a: 'LEFT_SHOULDER', b: 'LEFT_ELBOW', c: 'LEFT_WRIST' },
   rightElbow: { a: 'RIGHT_SHOULDER', b: 'RIGHT_ELBOW', c: 'RIGHT_WRIST' },
+  leftWrist: { a: 'LEFT_ELBOW', b: 'LEFT_WRIST', c: 'LEFT_INDEX' },
+  rightWrist: { a: 'RIGHT_ELBOW', b: 'RIGHT_WRIST', c: 'RIGHT_INDEX' },
+  leftHip: { a: 'LEFT_SHOULDER', b: 'LEFT_HIP', c: 'LEFT_KNEE' },
+  rightHip: { a: 'RIGHT_SHOULDER', b: 'RIGHT_HIP', c: 'RIGHT_KNEE' },
+  leftKnee: { a: 'LEFT_HIP', b: 'LEFT_KNEE', c: 'LEFT_ANKLE' },
+  rightKnee: { a: 'RIGHT_HIP', b: 'RIGHT_KNEE', c: 'RIGHT_ANKLE' },
+  leftAnkle: { a: 'LEFT_KNEE', b: 'LEFT_ANKLE', c: 'LEFT_FOOT_INDEX' },
+  rightAnkle: { a: 'RIGHT_KNEE', b: 'RIGHT_ANKLE', c: 'RIGHT_FOOT_INDEX' },
 }
 
 export const LANDMARKS = {

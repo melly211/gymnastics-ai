@@ -180,7 +180,7 @@ function Analyze() {
         ) : null}
 
         <div className="privacy-message">
-          Your video is analyzed and saved privately in this browser so you can revisit its results later. It is not uploaded to a server.
+          Your video is processed locally in your browser.
         </div>
 
         {error ? <div className="error-message">{error}</div> : null}

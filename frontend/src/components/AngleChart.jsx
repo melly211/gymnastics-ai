@@ -9,10 +9,11 @@ import {
   YAxis,
 } from 'recharts'
 
-function AngleChart({ title, data, angleKey, color = '#8b5cf6' }) {
+function AngleChart({ title, data, leftKey, rightKey, leftColor = '#60a5fa', rightColor = '#f472b6' }) {
   const mappedData = (data || []).map((point) => ({
     time: Number(point.time ?? 0),
-    value: Number(point.angles?.[angleKey] ?? 0),
+    left: Number(point.angles?.[leftKey] ?? null),
+    right: Number(point.angles?.[rightKey] ?? null),
   }))
 
   return (
@@ -32,7 +33,8 @@ function AngleChart({ title, data, angleKey, color = '#8b5cf6' }) {
             <YAxis tick={{ fill: '#cbd5e1', fontSize: 12 }} domain={[0, 180]} />
             <Tooltip contentStyle={{ background: '#0f172a', borderRadius: 12, border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }} />
             <Legend />
-            <Line type="monotone" dataKey="value" name={title} stroke={color} strokeWidth={3} dot={false} />
+            <Line type="monotone" dataKey="left" name="Left" stroke={leftColor} strokeWidth={3} dot={false} connectNulls />
+            <Line type="monotone" dataKey="right" name="Right" stroke={rightColor} strokeWidth={3} dot={false} connectNulls />
           </LineChart>
         </ResponsiveContainer>
       </div>
