@@ -68,6 +68,8 @@ function addPdfParagraph(document, text, y, options = {}) {
     y = 48
   }
 
+  document.setFont('helvetica', 'normal')
+  document.setTextColor(83, 61, 77)
   document.setFontSize(fontSize)
   document.text(lines, indent, y)
   return y + requiredHeight + 5
@@ -81,12 +83,16 @@ function addPdfSection(document, title, items, y) {
     y = 48
   }
 
-  document.setFontSize(13)
+  document.setFont('helvetica', 'bold')
+  document.setTextColor(123, 47, 83)
+  document.setFontSize(12)
   document.text(title, 40, y)
-  y += 20
+  document.setDrawColor(238, 210, 226)
+  document.line(40, y + 6, 555, y + 6)
+  y += 24
 
   for (const item of items) {
-    y = addPdfParagraph(document, `• ${item}`, y, { indent: 48 })
+    y = addPdfParagraph(document, `- ${item}`, y, { indent: 48 })
   }
 
   return y + 8
@@ -258,16 +264,24 @@ function Results() {
     const document = new jsPDF({ unit: 'pt', format: 'a4' })
     const fileStem = (video.filename || 'gymnastics-analysis').replace(/\.[^/.]+$/, '')
 
-    document.setFontSize(22)
-    document.text('Gymnastics Movement Analysis Report', 40, 52)
-    document.setFontSize(11)
-    let y = addPdfParagraph(
-      document,
-      `${video.filename || 'Uploaded video'} • ${formatDuration(video.duration)} • ${video.width || 0} × ${video.height || 0}`,
-      78,
+    document.setFillColor(74, 29, 45)
+    document.roundedRect(32, 28, 531, 94, 12, 12, 'F')
+    document.setTextColor(255, 255, 255)
+    document.setFont('helvetica', 'bold')
+    document.setFontSize(19)
+    document.text('Movement coaching report', 50, 60)
+    document.setFont('helvetica', 'normal')
+    document.setFontSize(10)
+    document.text(video.filename || 'Uploaded video', 50, 82)
+    document.setTextColor(246, 202, 223)
+    document.text(
+      `${formatDuration(video.duration)}   |   ${video.width || 0} x ${video.height || 0}`,
+      50,
+      102,
     )
+    let y = 148
 
-    y = addPdfSection(document, 'Report summary', aiReport?.summary ? [reportText(aiReport.summary)] : [], y + 4)
+    y = addPdfSection(document, 'REPORT SUMMARY', aiReport?.summary ? [reportText(aiReport.summary)] : [], y)
     y = addPdfSection(document, 'What went well', reportTextList(aiReport?.what_went_well), y)
 
     const coachingItems = reportFeedbackList(aiReport?.coaching_feedback).map((item) => {
@@ -612,31 +626,39 @@ function Results() {
 
           {aiReport ? (
             <section className="panel ai-panel">
-              <div className="panel-header">
-                <div>
-                  <p className="eyebrow">AI interpretation</p>
-                  <h3>DeepSeek movement analysis</h3>
+              <div className="ai-report-heading">
+                <div className="ai-report-mark" aria-hidden="true">
+                  <Sparkles size={21} />
                 </div>
+                <div className="ai-report-heading-copy">
+                  <p className="eyebrow">Personalized movement feedback</p>
+                  <h3>Your coaching report</h3>
+                  <p className="ai-report-subtitle">
+                    Thoughtful, practical feedback based on the movement measured in this video.
+                  </p>
+                </div>
+                <span className="ai-report-badge">AI interpretation</span>
               </div>
 
               <div className="ai-report-box">
                 {reportText(aiReport.summary) ? (
-                  <section className="ai-report-section">
-                    <h4>Summary</h4>
+                  <section className="ai-report-section ai-report-summary">
+                    <span className="ai-section-kicker">The overview</span>
                     <p>{reportText(aiReport.summary)}</p>
                   </section>
                 ) : null}
 
                 {reportTextList(aiReport.what_went_well).length ? (
-                  <section className="ai-report-section">
+                  <section className="ai-report-section ai-report-strengths">
                     <h4>What went well</h4>
                     <ul>{reportTextList(aiReport.what_went_well).map((point, index) => <li key={`${point}-${index}`}>{point}</li>)}</ul>
                   </section>
                 ) : null}
 
                 {reportFeedbackList(aiReport.coaching_feedback).length ? (
-                  <section className="ai-report-section">
+                  <section className="ai-report-section ai-report-coaching">
                     <h4>Coaching feedback</h4>
+                    <p className="ai-section-description">A few areas to explore in your next practice.</p>
                     <div className="coaching-feedback-list">
                       {reportFeedbackList(aiReport.coaching_feedback).map((item, index) => (
                         <article key={`${item.focus || 'feedback'}-${index}`} className="coaching-feedback-item">
@@ -644,9 +666,17 @@ function Results() {
                             <p>{item}</p>
                           ) : (
                             <>
-                              <h5>{reportText(item.focus) || 'Movement focus'}</h5>
-                              {reportText(item.what_measurements_suggest) ? <p>{reportText(item.what_measurements_suggest)}</p> : null}
-                              {reportText(item.try_this) ? <p><strong>Try this:</strong> {reportText(item.try_this)}</p> : null}
+                              <div className="coaching-focus-heading">
+                                <span className="coaching-focus-number">{String(index + 1).padStart(2, '0')}</span>
+                                <h5>{reportText(item.focus) || 'Movement focus'}</h5>
+                              </div>
+                              {reportText(item.what_measurements_suggest) ? <p className="coaching-context">{reportText(item.what_measurements_suggest)}</p> : null}
+                              {reportText(item.try_this) ? (
+                                <div className="coaching-cue">
+                                  <span>TRY THIS</span>
+                                  <p>{reportText(item.try_this)}</p>
+                                </div>
+                              ) : null}
                             </>
                           )}
                         </article>
@@ -656,9 +686,16 @@ function Results() {
                 ) : null}
 
                 {reportTextList(aiReport.practice_focus).length ? (
-                  <section className="ai-report-section">
+                  <section className="ai-report-section ai-report-practice">
                     <h4>Practice focus</h4>
-                    <ul>{reportTextList(aiReport.practice_focus).map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul>
+                    <div className="practice-focus-list">
+                      {reportTextList(aiReport.practice_focus).map((item, index) => (
+                        <div className="practice-focus-item" key={`${item}-${index}`}>
+                          <span>{String(index + 1).padStart(2, '0')}</span>
+                          <p>{item}</p>
+                        </div>
+                      ))}
+                    </div>
                   </section>
                 ) : null}
 
@@ -672,6 +709,10 @@ function Results() {
                 {!reportText(aiReport.summary) && !reportTextList(aiReport.what_went_well).length && !reportFeedbackList(aiReport.coaching_feedback).length && !reportTextList(aiReport.practice_focus).length ? (
                   <p>{reportText(aiReport.raw) || reportTextList(aiReport.review_points).join(' ') || 'The report did not include any narrative feedback.'}</p>
                 ) : null}
+              </div>
+              <div className="ai-report-footer">
+                <span>Generated from this video's measured movement data.</span>
+                <span>Use as a practice aid, not a medical assessment.</span>
               </div>
             </section>
           ) : null}
