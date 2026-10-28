@@ -774,9 +774,9 @@
   overflow: hidden;
   padding: 0;
   background:
-    radial-gradient(circle at 100% 0, rgba(217, 70, 239, 0.1), transparent 30%),
+    radial-gradient(circle at 100% 0, rgba(236, 72, 153, 0.12), transparent 32%),
     rgba(255, 255, 255, 0.88);
-  border-color: rgba(190, 24, 93, 0.18);
+  border-color: rgba(219, 39, 119, 0.2);
 }
 
 .ai-report-heading {
@@ -784,7 +784,7 @@
   align-items: center;
   gap: 16px;
   padding: 26px 28px;
-  border-bottom: 1px solid rgba(217, 70, 239, 0.14);
+  border-bottom: 1px solid rgba(219, 39, 119, 0.14);
 }
 
 .ai-report-mark {
@@ -794,8 +794,8 @@
   flex: 0 0 auto;
   place-items: center;
   border-radius: 17px;
-  background: linear-gradient(145deg, #fbcfe8, #e9d5ff);
-  color: #9d174d;
+  background: linear-gradient(145deg, #f9a8d4, #ec4899);
+  color: #fff;
   box-shadow: 0 8px 18px rgba(190, 24, 93, 0.12);
 }
 
@@ -823,10 +823,10 @@
 .ai-report-badge {
   align-self: flex-start;
   padding: 7px 11px;
-  border: 1px solid rgba(190, 24, 93, 0.16);
+  border: 1px solid rgba(219, 39, 119, 0.18);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
-  color: #9d174d;
+  color: #be185d;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -856,7 +856,7 @@
 .ai-report-section + .ai-report-section {
   margin-top: 0;
   padding-top: 22px;
-  border-top: 1px solid rgba(217, 70, 239, 0.12);
+  border-top: 1px solid rgba(219, 39, 119, 0.12);
 }
 
 .ai-report-section h4 {
@@ -869,9 +869,9 @@
 .ai-report-summary {
   margin: 16px 0 22px;
   padding: 20px 22px;
-  border: 1px solid rgba(190, 24, 93, 0.12);
+  border: 1px solid rgba(219, 39, 119, 0.13);
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(255, 247, 251, 0.96), rgba(250, 232, 247, 0.78));
+  background: linear-gradient(135deg, rgba(255, 247, 251, 0.98), rgba(252, 231, 243, 0.86));
 }
 
 .ai-section-kicker {
@@ -900,10 +900,10 @@
 .ai-report-strengths li {
   position: relative;
   padding: 12px 14px 12px 40px;
-  border: 1px solid rgba(22, 163, 74, 0.13);
+  border: 1px solid rgba(219, 39, 119, 0.13);
   border-radius: 12px;
-  background: rgba(240, 253, 244, 0.72);
-  color: #355a43;
+  background: rgba(253, 242, 248, 0.78);
+  color: #6d3452;
 }
 
 .ai-report-strengths li::before {
@@ -913,8 +913,8 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #dcfce7;
-  color: #15803d;
+  background: #fce7f3;
+  color: #be185d;
   content: "✓";
   font-size: 0.72rem;
   font-weight: 800;
@@ -937,7 +937,7 @@
 .coaching-feedback-item {
   min-width: 0;
   padding: 18px;
-  border: 1px solid rgba(190, 24, 93, 0.12);
+  border: 1px solid rgba(219, 39, 119, 0.14);
   border-radius: 15px;
   background: rgba(255, 255, 255, 0.83);
   box-shadow: 0 8px 20px rgba(74, 29, 45, 0.045);
@@ -959,7 +959,7 @@
   place-items: center;
   border-radius: 10px;
   background: #fce7f3;
-  color: #9d174d;
+  color: #be185d;
   font-size: 0.72rem;
   font-weight: 800;
 }
@@ -982,9 +982,9 @@
 .coaching-cue {
   margin-top: 14px;
   padding: 12px 14px;
-  border-left: 3px solid #d946ef;
+  border-left: 3px solid #ec4899;
   border-radius: 0 10px 10px 0;
-  background: rgba(250, 232, 247, 0.62);
+  background: rgba(252, 231, 243, 0.72);
 }
 
 .coaching-cue > span {
@@ -1012,7 +1012,7 @@
   align-items: flex-start;
   gap: 10px;
   padding: 13px;
-  border: 1px solid rgba(217, 70, 239, 0.1);
+  border: 1px solid rgba(219, 39, 119, 0.12);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.68);
 }
@@ -1028,12 +1028,12 @@
   padding: 15px 17px 0 !important;
   border-top: 0 !important;
   border-radius: 12px;
-  background: rgba(255, 247, 237, 0.72);
+  background: rgba(253, 242, 248, 0.78);
   color: #76546a;
 }
 
 .tracking-note h4 {
-  color: #925b22;
+  color: #9d174d;
 }
 
 .ai-report-footer {
@@ -1042,7 +1042,7 @@
   gap: 12px;
   margin: 0 28px 22px;
   padding-top: 14px;
-  border-top: 1px solid rgba(217, 70, 239, 0.1);
+  border-top: 1px solid rgba(219, 39, 119, 0.12);
   color: #8a6e80;
   font-size: 0.75rem;
 }

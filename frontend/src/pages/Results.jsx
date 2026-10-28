@@ -264,7 +264,7 @@ function Results() {
     const document = new jsPDF({ unit: 'pt', format: 'a4' })
     const fileStem = (video.filename || 'gymnastics-analysis').replace(/\.[^/.]+$/, '')
 
-    document.setFillColor(74, 29, 45)
+    document.setFillColor(190, 24, 93)
     document.roundedRect(32, 28, 531, 94, 12, 12, 'F')
     document.setTextColor(255, 255, 255)
     document.setFont('helvetica', 'bold')
