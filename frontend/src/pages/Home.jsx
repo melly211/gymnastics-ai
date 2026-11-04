@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, Camera, Gauge, Sparkles } from 'lucide-react'
+import { ArrowRight, BarChart3, Camera, CalendarCheck, Gauge, Repeat2, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import yogaBalanceImage from '../assets/yoga-balance.png'
@@ -32,6 +32,16 @@ const featureCards = [
     title: 'Range of Motion',
     text: 'Review min, max, average, and motion range for each key joint.',
   },
+  {
+    icon: Repeat2,
+    title: 'Progress Comparison',
+    text: 'Compare saved movement measurements across different analysis sessions.',
+  },
+  {
+    icon: CalendarCheck,
+    title: 'Practice Goals',
+    text: 'Set a weekly practice target and track completed days and streaks.',
+  },
 ]
 
 const workflow = ['Upload Video', 'Track Body Position', 'Calculate Joint Motion', 'Review Results']
@@ -53,7 +63,10 @@ function Home() {
               <ArrowRight size={18} />
             </Link>
             <Link to="/results" className="secondary-button">
-              View demo results
+              View saved analyses
+            </Link>
+            <Link to="/goals" className="secondary-button">
+              Set a practice goal
             </Link>
           </div>
         </div>

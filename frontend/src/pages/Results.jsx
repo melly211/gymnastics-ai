@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, CheckCircle2, Clock3, FileText, FileVideo2, Pencil, Sparkles, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Check, CheckCircle2, Clock3, FileText, FileVideo2, Pencil, Repeat2, Sparkles, Trash2, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { jsPDF } from 'jspdf'
@@ -68,6 +68,106 @@ function formatRoutineItem(item) {
   ].filter(Boolean).join(' — ')
 }
 
+function getComparisonRows(currentAnalysis, comparisonAnalysis) {
+  const rows = [
+    ...['leftKnee', 'rightKnee', 'leftHip', 'rightHip', 'leftElbow', 'rightElbow'].map((joint) => ({
+      label: `${formatJointLabel(joint)} average angle`,
+      current: currentAnalysis?.joints?.[joint]?.average,
+      comparison: comparisonAnalysis?.joints?.[joint]?.average,
+      unit: '°',
+    })),
+    { label: 'Knee side-to-side difference', current: currentAnalysis?.symmetry?.kneeAverageDifference, comparison: comparisonAnalysis?.symmetry?.kneeAverageDifference, unit: '°' },
+    { label: 'Hip side-to-side difference', current: currentAnalysis?.symmetry?.hipAverageDifference, comparison: comparisonAnalysis?.symmetry?.hipAverageDifference, unit: '°' },
+    { label: 'Elbow side-to-side difference', current: currentAnalysis?.symmetry?.elbowAverageDifference, comparison: comparisonAnalysis?.symmetry?.elbowAverageDifference, unit: '°' },
+    { label: 'Torso lean range', current: currentAnalysis?.movement?.torsoLeanRange, comparison: comparisonAnalysis?.movement?.torsoLeanRange, unit: '°' },
+  ]
+
+  return rows.filter(({ current, comparison }) => (
+    current !== null && current !== undefined && Number.isFinite(Number(current))
+    && comparison !== null && comparison !== undefined && Number.isFinite(Number(comparison))
+  )).map((row) => {
+    const change = Number(row.current) - Number(row.comparison)
+    return {
+      ...row,
+      current: Number(row.current),
+      comparison: Number(row.comparison),
+      change: Math.abs(change) < 0.05 ? 0 : change,
+    }
+  })
+}
+
+function ProgressComparison({ currentRecord, history, compareId, onCompareChange }) {
+  const comparisonRecord = history.find((record) => record.id === compareId)
+  const rows = comparisonRecord
+    ? getComparisonRows(currentRecord.analysis, comparisonRecord.analysis)
+    : []
+  const currentMovement = currentRecord.analysis?.video?.movementType
+  const comparisonMovement = comparisonRecord?.analysis?.video?.movementType
+
+  return (
+    <section className="panel progress-comparison-panel">
+      <div className="panel-header">
+        <div>
+          <p className="eyebrow">Saved session comparison</p>
+          <h3><Repeat2 size={20} /> Compare movement measurements</h3>
+        </div>
+      </div>
+
+      <div className="comparison-controls">
+        <label htmlFor="comparison-analysis">Compare this analysis with</label>
+        <select id="comparison-analysis" value={compareId} onChange={(event) => onCompareChange(event.target.value)}>
+          {history.filter((record) => record.id !== currentRecord.id).map((record) => (
+            <option key={record.id} value={record.id}>
+              {record.displayName || record.filename} — {new Date(record.createdAt).toLocaleDateString()}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {comparisonRecord ? (
+        <>
+          {currentMovement && comparisonMovement && currentMovement !== comparisonMovement ? (
+            <p className="comparison-note">
+              These sessions have different movement categories. Compare the measurements cautiously; they may not be directly comparable.
+            </p>
+          ) : null}
+          <div className="comparison-table-wrap">
+            {rows.length ? (
+              <table className="comparison-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Measurement</th>
+                    <th scope="col">This session</th>
+                    <th scope="col">Compared session</th>
+                    <th scope="col">Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.label}>
+                      <th scope="row">{row.label}</th>
+                      <td>{row.current.toFixed(1)}{row.unit}</td>
+                      <td>{row.comparison.toFixed(1)}{row.unit}</td>
+                      <td>{row.change > 0 ? '+' : ''}{row.change.toFixed(1)}{row.unit}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="comparison-note">There are no shared measurements available for these saved sessions.</p>
+            )}
+          </div>
+          <p className="comparison-note">
+            Changes describe measured differences, not a score or guaranteed improvement. Try to use similar camera placement, framing, and movement conditions for each recording.
+          </p>
+        </>
+      ) : (
+        <p className="comparison-note">Choose another saved analysis to compare with this session.</p>
+      )}
+    </section>
+  )
+}
+
 function addPdfParagraph(document, text, y, options = {}) {
   const { fontSize = 10, indent = 40, lineHeight = 14 } = options
   const lines = document.splitTextToSize(String(text || ''), 515 - (indent - 40))
@@ -113,6 +213,7 @@ function Results() {
   const preferredHistoryId = location.state?.historyId
   const [history, setHistory] = useState([])
   const [selectedId, setSelectedId] = useState('')
+  const [compareId, setCompareId] = useState('')
   const [selectedRecord, setSelectedRecord] = useState(null)
   const [isHistoryLoading, setIsHistoryLoading] = useState(true)
   const [error, setError] = useState('')
@@ -132,11 +233,11 @@ function Results() {
         const savedHistory = await getAnalysisHistory()
         if (!isCurrent) return
         setHistory(savedHistory)
-        setSelectedId(
-          savedHistory.some((record) => record.id === preferredHistoryId)
-            ? preferredHistoryId
-            : savedHistory[0]?.id || '',
-        )
+        const nextSelectedId = savedHistory.some((record) => record.id === preferredHistoryId)
+          ? preferredHistoryId
+          : savedHistory[0]?.id || ''
+        setSelectedId(nextSelectedId)
+        setCompareId(savedHistory.find((record) => record.id !== nextSelectedId)?.id || '')
         setError('')
       } catch (loadError) {
         if (isCurrent) setError(loadError.message || 'Could not load saved analyses.')
@@ -202,6 +303,13 @@ function Results() {
     setError('')
   }
 
+  function selectAnalysis(id) {
+    setSelectedId(id)
+    if (compareId === id) {
+      setCompareId(history.find((record) => record.id !== id)?.id || '')
+    }
+  }
+
   async function saveRename(record) {
     setIsSavingName(true)
     setError('')
@@ -231,8 +339,13 @@ function Results() {
       await deleteSavedAnalysis(record.id)
       const remainingHistory = history.filter((item) => item.id !== record.id)
       setHistory(remainingHistory)
+      if (compareId === record.id) {
+        setCompareId(remainingHistory.find((item) => item.id !== selectedId)?.id || '')
+      }
       if (selectedId === record.id) {
-        setSelectedId(remainingHistory[0]?.id || '')
+        const nextSelectedId = remainingHistory[0]?.id || ''
+        setSelectedId(nextSelectedId)
+        setCompareId(remainingHistory.find((item) => item.id !== nextSelectedId)?.id || '')
       }
       if (editingId === record.id) {
         setEditingId('')
@@ -358,7 +471,7 @@ function Results() {
                   <button
                     type="button"
                     className="history-item"
-                    onClick={() => setSelectedId(record.id)}
+                    onClick={() => selectAnalysis(record.id)}
                     aria-pressed={record.id === selectedId}
                   >
                     <FileVideo2 size={20} />
@@ -480,6 +593,15 @@ function Results() {
 
           {!deepseekConfigured ? (
             <div className="info-message">DeepSeek API key is not configured.</div>
+          ) : null}
+
+          {history.length > 1 ? (
+            <ProgressComparison
+              currentRecord={displayedRecord}
+              history={history}
+              compareId={compareId}
+              onCompareChange={setCompareId}
+            />
           ) : null}
 
           <div className="stats-grid">

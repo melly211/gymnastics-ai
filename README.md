@@ -13,6 +13,8 @@ This frontend-only demo exposes the DeepSeek API key and must not be used for pr
 - Motion symmetry and torso lean metrics
 - Recharts time-series dashboards for angle tracking
 - AI interpretation through the DeepSeek Chat Completions API using calculated movement metrics, with specific coaching cues and optional stretching/strengthening ideas
+- Saved-session measurement comparisons for reviewing changes across analyses
+- Browser-local weekly practice goals, daily practice logging, and streak tracking
 - PDF export for a professional movement-analysis report
 - Private analysis history saved in the current browser, including the original videos
 
@@ -62,9 +64,12 @@ npm run build
 2. MediaPipe detects pose landmarks locally in the browser as the video is sampled.
 3. Joint angles and movement statistics are calculated from the detected landmarks.
 4. The results dashboard shows real movement metrics and optional AI interpretation.
-5. The generated report can be exported as a PDF.
+5. Compare a saved analysis with another session to review measurement changes, or set a weekly practice goal and log practice days from the Goals page.
+6. The generated report can be exported as a PDF.
 
 Saved history is local to the current browser profile and is not uploaded or synced. Clearing this site's browser data removes the saved analyses and videos. Browser storage limits apply, so saving can fail if there is not enough space.
+
+Practice goals and daily logs are also stored only in the current browser. Comparison values show measured differences and are not a performance score; camera placement and movement conditions can affect comparisons.
 
 ## Known limitations
 

@@ -1,10 +1,11 @@
-import { Activity, Gauge } from 'lucide-react'
+import { Activity, CalendarCheck, Gauge } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
 const navItems = [
   { label: 'Home', to: '/' },
   { label: 'Analyze', to: '/analyze' },
   { label: 'Results', to: '/results' },
+  { label: 'Goals', to: '/goals', icon: CalendarCheck },
 ]
 
 function Navbar() {
@@ -27,6 +28,7 @@ function Navbar() {
             to={item.to}
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
           >
+            {item.icon ? <item.icon size={15} /> : null}
             {item.label}
           </NavLink>
         ))}
