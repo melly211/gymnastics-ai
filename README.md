@@ -12,7 +12,7 @@ This frontend-only demo exposes the DeepSeek API key and must not be used for pr
 - Real joint angle calculations for knees, hips, elbows, shoulders, wrists, and ankles
 - Motion symmetry and torso lean metrics
 - Recharts time-series dashboards for angle tracking
-- AI interpretation through the DeepSeek Chat Completions API using only calculated movement metrics
+- AI interpretation through the DeepSeek Chat Completions API using calculated movement metrics, with specific coaching cues and optional stretching/strengthening ideas
 - PDF export for a professional movement-analysis report
 - Private analysis history saved in the current browser, including the original videos
 

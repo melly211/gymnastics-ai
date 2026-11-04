@@ -1039,6 +1039,54 @@
   font-size: 0.9rem;
 }
 
+.coaching-action {
+  margin-top: 12px;
+  color: #563247;
+}
+
+.coaching-action strong,
+.routine-item strong {
+  color: #7a2f53;
+  font-size: 0.84rem;
+}
+
+.coaching-action p,
+.routine-item p {
+  margin-top: 4px;
+  color: #76546a;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.routine-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.routine-item {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(219, 39, 119, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.83);
+}
+
+.routine-item h5 {
+  margin: 0 0 10px;
+  color: #7a2f53;
+  font-size: 0.95rem;
+}
+
+.routine-item p + p {
+  margin-top: 8px;
+}
+
+.routine-item .routine-relevance {
+  padding-top: 9px;
+  border-top: 1px solid rgba(219, 39, 119, 0.1);
+}
+
 .practice-focus-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1163,6 +1211,10 @@
   }
 
   .coaching-feedback-list {
+    grid-template-columns: 1fr;
+  }
+
+  .routine-list {
     grid-template-columns: 1fr;
   }
 

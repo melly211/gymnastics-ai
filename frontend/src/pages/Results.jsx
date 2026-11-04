@@ -58,6 +58,16 @@ function reportFeedbackList(value) {
   return value.filter((item) => typeof item === 'string' || (item && typeof item === 'object'))
 }
 
+function formatRoutineItem(item) {
+  if (typeof item === 'string') return item
+  return [
+    reportText(item.exercise),
+    item.dosage ? `Dosage: ${reportText(item.dosage)}` : '',
+    item.technique_cue ? `Cue: ${reportText(item.technique_cue)}` : '',
+    item.relevance ? `Why: ${reportText(item.relevance)}` : '',
+  ].filter(Boolean).join(' — ')
+}
+
 function addPdfParagraph(document, text, y, options = {}) {
   const { fontSize = 10, indent = 40, lineHeight = 14 } = options
   const lines = document.splitTextToSize(String(text || ''), 515 - (indent - 40))
@@ -286,11 +296,15 @@ function Results() {
       return [
         reportText(item.focus),
         reportText(item.what_measurements_suggest),
+        item.change_to_make ? `Change: ${reportText(item.change_to_make)}` : '',
+        item.how_to_fix ? `How to work on it: ${reportText(item.how_to_fix)}` : '',
         item.try_this ? `Try this: ${reportText(item.try_this)}` : '',
       ].filter(Boolean).join(' — ')
     })
     y = addPdfSection(document, 'Coaching feedback', coachingItems, y)
     y = addPdfSection(document, 'Practice focus', reportTextList(aiReport?.practice_focus), y)
+    y = addPdfSection(document, 'Stretching routine', reportFeedbackList(aiReport?.stretching_routine).map(formatRoutineItem), y)
+    y = addPdfSection(document, 'Strengthening routine', reportFeedbackList(aiReport?.strengthening_routine).map(formatRoutineItem), y)
     y = addPdfSection(document, 'Tracking note', aiReport?.tracking_note ? [reportText(aiReport.tracking_note)] : [], y)
     y = addPdfSection(document, 'Measured observations', analysis.observations || [], y)
 
@@ -673,6 +687,18 @@ function Results() {
                                 <h5>{reportText(item.focus) || 'Movement focus'}</h5>
                               </div>
                               {reportText(item.what_measurements_suggest) ? <p className="coaching-context">{reportText(item.what_measurements_suggest)}</p> : null}
+                              {reportText(item.change_to_make) ? (
+                                <div className="coaching-action">
+                                  <strong>Change to work on</strong>
+                                  <p>{reportText(item.change_to_make)}</p>
+                                </div>
+                              ) : null}
+                              {reportText(item.how_to_fix) ? (
+                                <div className="coaching-action">
+                                  <strong>How to work on it</strong>
+                                  <p>{reportText(item.how_to_fix)}</p>
+                                </div>
+                              ) : null}
                               {reportText(item.try_this) ? (
                                 <div className="coaching-cue">
                                   <span>TRY THIS</span>
@@ -686,6 +712,37 @@ function Results() {
                     </div>
                   </section>
                 ) : null}
+
+                {[
+                  { key: 'stretching_routine', title: 'Stretching routine' },
+                  { key: 'strengthening_routine', title: 'Strengthening routine' },
+                ].map(({ key, title }) => {
+                  const routine = reportFeedbackList(aiReport[key])
+                  if (!routine.length) return null
+
+                  return (
+                    <section className="ai-report-section ai-report-routine" key={key}>
+                      <h4>{title}</h4>
+                      <p className="ai-section-description">Optional, general practice ideas. Keep each movement comfortable and controlled.</p>
+                      <div className="routine-list">
+                        {routine.map((item, index) => (
+                          <article className="routine-item" key={`${item.exercise || item}-${index}`}>
+                            {typeof item === 'string' ? (
+                              <p>{item}</p>
+                            ) : (
+                              <>
+                                <h5>{reportText(item.exercise) || 'Practice exercise'}</h5>
+                                {reportText(item.dosage) ? <p><strong>Suggested amount:</strong> {reportText(item.dosage)}</p> : null}
+                                {reportText(item.technique_cue) ? <p><strong>Form cue:</strong> {reportText(item.technique_cue)}</p> : null}
+                                {reportText(item.relevance) ? <p className="routine-relevance"><strong>Why it may help:</strong> {reportText(item.relevance)}</p> : null}
+                              </>
+                            )}
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  )
+                })}
 
                 {reportTextList(aiReport.practice_focus).length ? (
                   <section className="ai-report-section ai-report-practice">
@@ -708,7 +765,7 @@ function Results() {
                   </section>
                 ) : null}
 
-                {!reportText(aiReport.summary) && !reportTextList(aiReport.what_went_well).length && !reportFeedbackList(aiReport.coaching_feedback).length && !reportTextList(aiReport.practice_focus).length ? (
+                {!reportText(aiReport.summary) && !reportTextList(aiReport.what_went_well).length && !reportFeedbackList(aiReport.coaching_feedback).length && !reportTextList(aiReport.practice_focus).length && !reportFeedbackList(aiReport.stretching_routine).length && !reportFeedbackList(aiReport.strengthening_routine).length ? (
                   <p>{reportText(aiReport.raw) || reportTextList(aiReport.review_points).join(' ') || 'The report did not include any narrative feedback.'}</p>
                 ) : null}
               </div>
