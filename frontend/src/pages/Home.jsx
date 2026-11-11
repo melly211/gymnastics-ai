@@ -109,16 +109,29 @@ function Home() {
         </div>
       </section>
 
-      <section className="feature-grid">
-        {featureCards.map(({ icon: Icon, title, text }) => (
-          <article key={title} className="feature-card panel">
-            <div className="feature-icon">
-              <Icon size={22} />
-            </div>
-            <h3>{title}</h3>
-            <p>{text}</p>
-          </article>
-        ))}
+      <section className="feature-section" aria-labelledby="feature-heading">
+        <div className="feature-section-heading">
+          <div>
+            <p className="eyebrow">Built for better movement</p>
+            <h2 id="feature-heading">Your practice, in perspective</h2>
+          </div>
+          <span className="feature-count">
+            <Sparkles size={15} />
+            {String(featureCards.length).padStart(2, '0')} tools to explore
+          </span>
+        </div>
+        <div className="feature-grid">
+          {featureCards.map(({ icon: Icon, title, text }, index) => (
+            <article key={title} className="feature-card panel">
+              <span className="feature-number">{String(index + 1).padStart(2, '0')}</span>
+              <div className="feature-icon">
+                <Icon size={22} />
+              </div>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="workflow panel">

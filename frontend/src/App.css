@@ -355,20 +355,92 @@
   to { transform: rotateX(66deg) rotateZ(338deg); }
 }
 
+.feature-section {
+  display: grid;
+  gap: 20px;
+}
+
+.feature-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.feature-section-heading .eyebrow {
+  margin-bottom: 8px;
+}
+
+.feature-section-heading h2 {
+  color: #4a1d2d;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  letter-spacing: -0.035em;
+}
+
+.feature-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 13px;
+  border: 1px solid rgba(217, 70, 239, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  color: #9d174d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 18px;
 }
 
 .feature-card {
+  position: relative;
+  min-height: 220px;
   padding: 24px 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 0, rgba(251, 207, 232, 0.42), transparent 38%),
+    rgba(255, 255, 255, 0.76);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
+.feature-card::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f9a8d4, #d946ef, #c4b5fd);
+  content: '';
+  opacity: 0;
+  transform: scaleX(0.35);
+  transform-origin: left;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
 .feature-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-5px) rotateX(1deg);
   box-shadow: 0 24px 48px rgba(190, 24, 93, 0.14);
+}
+
+.feature-card:hover::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.feature-number {
+  position: absolute;
+  top: 20px;
+  right: 21px;
+  color: rgba(157, 23, 77, 0.38);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
 .feature-icon {
@@ -383,7 +455,7 @@
 }
 
 .feature-card h3 {
-  margin-top: 20px;
+  margin-top: 18px;
   color: #4a1d2d;
   font-size: 1.2rem;
 }
@@ -1651,6 +1723,11 @@
 
   .hero-scene {
     min-height: 330px;
+  }
+
+  .feature-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .scene-athlete {
