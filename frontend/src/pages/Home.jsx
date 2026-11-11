@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, Camera, CalendarCheck, Gauge, Repeat2, Sparkles } from 'lucide-react'
+import { ArrowRight, BarChart3, Camera, CalendarCheck, Gauge, MoveUpRight, Repeat2, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import yogaBalanceImage from '../assets/yoga-balance.png'
@@ -71,19 +71,26 @@ function Home() {
           </div>
         </div>
 
-        <div className="hero-panel">
-          <div className="mini-panel">
-            <span className="mini-label">Balance</span>
-            <strong>94%</strong>
+        <div className="hero-scene">
+          <div className="scene-orbit orbit-outer" aria-hidden="true" />
+          <div className="scene-orbit orbit-inner" aria-hidden="true" />
+          <div className="scene-glow" aria-hidden="true" />
+          <figure className="scene-athlete">
+            <img src={yogaBalanceImage} alt="Gymnast holding a controlled backbend" />
+            <figcaption className="scene-image-label">
+              <span className="scene-live-dot" />
+              Movement in focus
+            </figcaption>
+          </figure>
+          <div className="scene-chip scene-chip-top">
+            <span className="scene-chip-icon"><MoveUpRight size={15} /></span>
+            <span><small>Range of motion</small><strong>In focus</strong></span>
           </div>
-          <div className="mini-panel accent">
-            <span className="mini-label">Control</span>
-            <strong>High</strong>
+          <div className="scene-chip scene-chip-bottom">
+            <span className="scene-score">94</span>
+            <span><small>Balance</small><strong>Excellent control</strong></span>
           </div>
-          <div className="mini-panel">
-            <span className="mini-label">Tempo</span>
-            <strong>Stable</strong>
-          </div>
+          <div className="scene-index" aria-hidden="true">01 <span>/ 04</span></div>
         </div>
       </section>
 
