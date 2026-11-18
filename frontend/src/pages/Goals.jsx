@@ -1,9 +1,11 @@
-import { CalendarCheck, CheckCircle2, Flame, Target } from 'lucide-react'
+import { CalendarCheck, CheckCircle2, ChevronLeft, ChevronRight, Flame, Target } from 'lucide-react'
 import { useState } from 'react'
 
-import { getPracticeProgress, logPracticeSession, updateWeeklyPracticeGoal } from '../services/practiceGoals'
+import { getPracticeProgress, localDateKey, logPracticeSession, updateWeeklyPracticeGoal } from '../services/practiceGoals'
 
 function Goals() {
+  const [today] = useState(() => new Date())
+  const [visibleMonth, setVisibleMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [initialState] = useState(() => {
     try {
       const savedProgress = getPracticeProgress()
@@ -38,6 +40,28 @@ function Goals() {
     } catch (logError) {
       setError(logError.message || 'Today’s practice could not be logged.')
     }
+  }
+
+  function logPracticeDate(date) {
+    setError('')
+    try {
+      setProgress(logPracticeSession(date))
+    } catch (logError) {
+      setError(logError.message || 'The selected practice day could not be logged.')
+    }
+  }
+
+  const year = visibleMonth.getFullYear()
+  const month = visibleMonth.getMonth()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const leadingDays = (new Date(year, month, 1).getDay() + 6) % 7
+  const monthKey = `${year}-${String(month + 1).padStart(2, '0')}-`
+  const sessionsThisMonth = progress?.sessions.filter((session) => session.startsWith(monthKey)).length ?? 0
+  const canGoForward = year < today.getFullYear()
+    || (year === today.getFullYear() && month < today.getMonth())
+
+  function changeMonth(offset) {
+    setVisibleMonth((currentMonth) => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1))
   }
 
   const goalReached = progress && progress.sessionsThisWeek >= progress.targetDays
@@ -95,6 +119,80 @@ function Goals() {
                 <span>Current streak</span>
                 <strong>{progress.currentStreak} {progress.currentStreak === 1 ? 'day' : 'days'}</strong>
               </div>
+            </div>
+          </section>
+
+          <section className="panel practice-calendar-panel" aria-labelledby="practice-calendar-title">
+            <div className="practice-calendar-heading">
+              <div>
+                <p className="eyebrow">Your activity</p>
+                <h3 id="practice-calendar-title">Practice calendar</h3>
+              </div>
+              <div className="calendar-month-summary">
+                <strong>{sessionsThisMonth}</strong>
+                <span>{sessionsThisMonth === 1 ? 'day' : 'days'} this month</span>
+              </div>
+            </div>
+
+            <div className="calendar-navigation">
+              <button
+                type="button"
+                className="calendar-nav-button"
+                onClick={() => changeMonth(-1)}
+                aria-label="Previous month"
+              >
+                <ChevronLeft size={19} />
+              </button>
+              <h4 aria-live="polite">
+                {visibleMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+              </h4>
+              <button
+                type="button"
+                className="calendar-nav-button"
+                onClick={() => changeMonth(1)}
+                disabled={!canGoForward}
+                aria-label="Next month"
+              >
+                <ChevronRight size={19} />
+              </button>
+            </div>
+
+            <div className="practice-calendar-grid" role="grid" aria-label="Practice days">
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                <span className="calendar-weekday" key={day} role="columnheader">{day}</span>
+              ))}
+              {Array.from({ length: leadingDays }, (_, index) => (
+                <span className="calendar-day calendar-day-empty" key={`empty-${index}`} role="gridcell" />
+              ))}
+              {Array.from({ length: daysInMonth }, (_, index) => {
+                const day = index + 1
+                const date = new Date(year, month, day)
+                const dateKey = localDateKey(date)
+                const isLogged = progress.sessions.includes(dateKey)
+                const isToday = dateKey === localDateKey(today)
+                const isFuture = date > new Date(today.getFullYear(), today.getMonth(), today.getDate())
+
+                return (
+                  <button
+                    type="button"
+                    className={`calendar-day${isLogged ? ' calendar-day-logged' : ''}${isToday ? ' calendar-day-today' : ''}`}
+                    key={dateKey}
+                    onClick={() => logPracticeDate(date)}
+                    disabled={isLogged || isFuture}
+                    aria-label={`${date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}${isLogged ? ', practice logged' : isFuture ? ', future date' : ', log practice'}`}
+                    aria-pressed={isLogged}
+                    role="gridcell"
+                    title={isLogged ? 'Practice logged' : isFuture ? 'Future dates cannot be logged' : 'Log a practice day'}
+                  >
+                    {day}
+                    {isLogged ? <CheckCircle2 size={13} aria-hidden="true" /> : null}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="calendar-legend">
+              <span><i className="calendar-legend-dot" /> Practice logged</span>
+              <span>Select any past or current day to log a session.</span>
             </div>
           </section>
 
