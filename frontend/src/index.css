@@ -24,8 +24,10 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top, rgba(251, 113, 133, 0.18), transparent 30%),
-    linear-gradient(180deg, #fff7fb 0%, #fce7f3 100%);
+    radial-gradient(ellipse at 8% 5%, rgba(251, 113, 133, 0.14), transparent 28%),
+    radial-gradient(ellipse at 92% 18%, rgba(196, 181, 253, 0.18), transparent 30%),
+    linear-gradient(180deg, #fffafd 0%, #fff6fa 54%, #fdf2f8 100%);
+  background-attachment: fixed;
 }
 
 img,
@@ -43,6 +45,15 @@ select {
 
 button {
   cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(192, 38, 211, 0.48);
+  outline-offset: 3px;
 }
 
 #root {
