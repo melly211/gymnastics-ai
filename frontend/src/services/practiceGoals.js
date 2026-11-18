@@ -17,7 +17,7 @@ function parseStoredGoals() {
   }
 
   if (!stored) {
-    return { targetDays: DEFAULT_TARGET_DAYS, sessions: [] }
+    return { targetDays: DEFAULT_TARGET_DAYS, sessions: [], journal: {} }
   }
 
   let data
@@ -27,6 +27,8 @@ function parseStoredGoals() {
     throw new Error('Saved practice goals could not be read. Clear this site’s practice-goal data and try again.', { cause: error })
   }
 
+  const journal = data?.journal === undefined ? {} : data.journal
+
   if (
     !data
     || !Number.isInteger(data.targetDays)
@@ -34,18 +36,36 @@ function parseStoredGoals() {
     || data.targetDays > 7
     || !Array.isArray(data.sessions)
     || data.sessions.some((session) => !/^\d{4}-\d{2}-\d{2}$/.test(session))
+    || !journal
+    || typeof journal !== 'object'
+    || Array.isArray(journal)
+    || Object.entries(journal).some(([date, entry]) => (
+      !/^\d{4}-\d{2}-\d{2}$/.test(date)
+      || !entry
+      || typeof entry.focus !== 'string'
+      || entry.focus.length > 80
+      || typeof entry.notes !== 'string'
+      || entry.notes.length > 1000
+      || !Number.isInteger(entry.minutes)
+      || entry.minutes < 0
+      || entry.minutes > 1440
+    ))
   ) {
-    throw new Error('Saved practice goals are invalid. Clear this site’s practice-goal data and try again.')
+    throw new Error('Saved practice data is invalid. Clear this site’s practice-goal data and try again.')
   }
 
-  return { targetDays: data.targetDays, sessions: [...new Set(data.sessions)].sort() }
+  return {
+    targetDays: data.targetDays,
+    sessions: [...new Set(data.sessions)].sort(),
+    journal,
+  }
 }
 
 function saveGoals(goals) {
   try {
     globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(goals))
   } catch (error) {
-    throw new Error('Practice goals could not be saved in this browser.', { cause: error })
+    throw new Error('Practice data could not be saved in this browser.', { cause: error })
   }
 }
 
@@ -87,6 +107,61 @@ function progressFor(goals, today = new Date()) {
 
 export function getPracticeProgress() {
   return progressFor(parseStoredGoals())
+}
+
+export function getPracticeJournalEntry(date = new Date()) {
+  if (!(date instanceof Date) || !Number.isFinite(date.getTime())) {
+    throw new Error('Choose a valid date for this practice entry.')
+  }
+
+  const goals = parseStoredGoals()
+  const entry = goals.journal[localDateKey(date)]
+  return entry ? { ...entry } : { focus: '', notes: '', minutes: 0 }
+}
+
+export function savePracticeJournalEntry(date, entry) {
+  if (!(date instanceof Date) || !Number.isFinite(date.getTime())) {
+    throw new Error('Choose a valid date for this practice entry.')
+  }
+  if (
+    !entry
+    || typeof entry.focus !== 'string'
+    || typeof entry.notes !== 'string'
+    || !Number.isInteger(entry.minutes)
+    || entry.minutes < 0
+    || entry.minutes > 1440
+  ) {
+    throw new Error('Enter a practice focus, notes, and a duration between zero and 1,440 minutes.')
+  }
+
+  const focus = entry.focus.trim()
+  const notes = entry.notes.trim()
+  if (focus.length > 80 || notes.length > 1000) {
+    throw new Error('Keep the practice focus under 80 characters and notes under 1,000 characters.')
+  }
+
+  const goals = parseStoredGoals()
+  const dateKey = localDateKey(date)
+  const journal = { ...goals.journal }
+  const hasDetails = Boolean(focus || notes || entry.minutes)
+
+  if (hasDetails) {
+    journal[dateKey] = { focus, notes, minutes: entry.minutes }
+  } else {
+    delete journal[dateKey]
+  }
+
+  const nextGoals = {
+    ...goals,
+    sessions: [...new Set([...goals.sessions, dateKey])].sort(),
+    journal,
+  }
+  saveGoals(nextGoals)
+
+  return {
+    progress: progressFor(nextGoals),
+    entry: hasDetails ? { focus, notes, minutes: entry.minutes } : { focus: '', notes: '', minutes: 0 },
+  }
 }
 
 export function updateWeeklyPracticeGoal(targetDays) {

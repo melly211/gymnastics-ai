@@ -1,25 +1,43 @@
-import { CalendarCheck, CheckCircle2, ChevronLeft, ChevronRight, Flame, Target } from 'lucide-react'
+import { BookOpen, CalendarCheck, CheckCircle2, ChevronLeft, ChevronRight, Flame, Save, Target } from 'lucide-react'
 import { useState } from 'react'
 
-import { getPracticeProgress, localDateKey, logPracticeSession, updateWeeklyPracticeGoal } from '../services/practiceGoals'
+import {
+  getPracticeJournalEntry,
+  getPracticeProgress,
+  localDateKey,
+  logPracticeSession,
+  savePracticeJournalEntry,
+  updateWeeklyPracticeGoal,
+} from '../services/practiceGoals'
 
 function Goals() {
   const [today] = useState(() => new Date())
   const [visibleMonth, setVisibleMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
+  const [selectedDate, setSelectedDate] = useState(today)
   const [initialState] = useState(() => {
+    let progress = null
+    let journalEntry = { focus: '', notes: '', minutes: 0 }
+    let error = ''
+
     try {
-      const savedProgress = getPracticeProgress()
-      return { progress: savedProgress, selectedTarget: savedProgress.targetDays, error: '' }
+      progress = getPracticeProgress()
     } catch (loadError) {
-      return {
-        progress: null,
-        selectedTarget: 3,
-        error: loadError.message || 'Practice goals could not be loaded.',
+      error = loadError.message || 'Practice goals could not be loaded.'
+    }
+
+    if (progress) {
+      try {
+        journalEntry = getPracticeJournalEntry(today)
+      } catch (loadError) {
+        error = loadError.message || 'The practice journal could not be loaded.'
       }
     }
+
+    return { progress, selectedTarget: progress?.targetDays ?? 3, journalEntry, error }
   })
   const [progress, setProgress] = useState(initialState.progress)
   const [selectedTarget, setSelectedTarget] = useState(initialState.selectedTarget)
+  const [journalEntry, setJournalEntry] = useState(initialState.journalEntry)
   const [error, setError] = useState(initialState.error)
 
   function saveGoal(event) {
@@ -34,20 +52,33 @@ function Goals() {
   }
 
   function logToday() {
+    openPracticeDate(new Date())
+  }
+
+  function openPracticeDate(date) {
     setError('')
     try {
-      setProgress(logPracticeSession())
+      const dateKey = localDateKey(date)
+      if (!progress.sessions.includes(dateKey)) {
+        logPracticeSession(date)
+      }
+      setProgress(getPracticeProgress())
+      setSelectedDate(date)
+      setJournalEntry(getPracticeJournalEntry(date))
     } catch (logError) {
-      setError(logError.message || 'Today’s practice could not be logged.')
+      setError(logError.message || 'The selected practice day could not be opened.')
     }
   }
 
-  function logPracticeDate(date) {
+  function saveJournal(event) {
+    event.preventDefault()
     setError('')
     try {
-      setProgress(logPracticeSession(date))
-    } catch (logError) {
-      setError(logError.message || 'The selected practice day could not be logged.')
+      const savedEntry = savePracticeJournalEntry(selectedDate, journalEntry)
+      setProgress(savedEntry.progress)
+      setJournalEntry(savedEntry.entry)
+    } catch (saveError) {
+      setError(saveError.message || 'The practice entry could not be saved.')
     }
   }
 
@@ -170,19 +201,20 @@ function Goals() {
                 const dateKey = localDateKey(date)
                 const isLogged = progress.sessions.includes(dateKey)
                 const isToday = dateKey === localDateKey(today)
+                const isSelected = dateKey === localDateKey(selectedDate)
                 const isFuture = date > new Date(today.getFullYear(), today.getMonth(), today.getDate())
 
                 return (
                   <button
                     type="button"
-                    className={`calendar-day${isLogged ? ' calendar-day-logged' : ''}${isToday ? ' calendar-day-today' : ''}`}
+                    className={`calendar-day${isLogged ? ' calendar-day-logged' : ''}${isToday ? ' calendar-day-today' : ''}${isSelected ? ' calendar-day-selected' : ''}`}
                     key={dateKey}
-                    onClick={() => logPracticeDate(date)}
-                    disabled={isLogged || isFuture}
-                    aria-label={`${date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}${isLogged ? ', practice logged' : isFuture ? ', future date' : ', log practice'}`}
-                    aria-pressed={isLogged}
+                    onClick={() => openPracticeDate(date)}
+                    disabled={isFuture}
+                    aria-label={`${date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}${isLogged ? ', practice logged' : isFuture ? ', future date' : ', open practice journal'}`}
+                    aria-pressed={isSelected}
                     role="gridcell"
-                    title={isLogged ? 'Practice logged' : isFuture ? 'Future dates cannot be logged' : 'Log a practice day'}
+                    title={isLogged ? 'View or edit practice entry' : isFuture ? 'Future dates cannot be logged' : 'Log practice and add details'}
                   >
                     {day}
                     {isLogged ? <CheckCircle2 size={13} aria-hidden="true" /> : null}
@@ -192,8 +224,60 @@ function Goals() {
             </div>
             <div className="calendar-legend">
               <span><i className="calendar-legend-dot" /> Practice logged</span>
-              <span>Select any past or current day to log a session.</span>
+              <span>Select a date to log practice or edit its journal entry.</span>
             </div>
+
+            <form className="practice-journal-form" onSubmit={saveJournal}>
+              <div className="practice-journal-title">
+                <div>
+                  <p className="eyebrow"><BookOpen size={14} /> Session journal</p>
+                  <h4>{selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</h4>
+                </div>
+              </div>
+              <div className="practice-journal-fields">
+                <label>
+                  Practice focus
+                  <input
+                    type="text"
+                    maxLength={80}
+                    placeholder="e.g. balance, flexibility, turns"
+                    value={journalEntry.focus}
+                    onChange={(event) => setJournalEntry((current) => ({ ...current, focus: event.target.value }))}
+                  />
+                </label>
+                <label>
+                  Minutes practiced
+                  <input
+                    type="number"
+                    min="0"
+                    max="1440"
+                    step="5"
+                    value={journalEntry.minutes}
+                    onChange={(event) => setJournalEntry((current) => ({
+                      ...current,
+                      minutes: event.target.value === '' ? 0 : Number(event.target.value),
+                    }))}
+                  />
+                </label>
+                <label className="practice-journal-notes">
+                  Notes
+                  <textarea
+                    maxLength={1000}
+                    rows={3}
+                    placeholder="What felt good? What would you like to work on next time?"
+                    value={journalEntry.notes}
+                    onChange={(event) => setJournalEntry((current) => ({ ...current, notes: event.target.value }))}
+                  />
+                </label>
+              </div>
+              <div className="practice-journal-footer">
+                <p>Saving also logs this date on your calendar.</p>
+                <button type="submit" className="secondary-button">
+                  <Save size={16} />
+                  Save session
+                </button>
+              </div>
+            </form>
           </section>
 
           <section className="panel goal-settings-panel">

@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, Camera, CalendarCheck, Gauge, MoveUpRight, Repeat2, Sparkles } from 'lucide-react'
+import { ArrowRight, BarChart3, BookOpen, Camera, CalendarCheck, Gauge, MoveUpRight, Repeat2, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import yogaBalanceImage from '../assets/yoga-balance.png'
@@ -41,6 +41,11 @@ const featureCards = [
     icon: CalendarCheck,
     title: 'Practice Goals',
     text: 'Set a weekly practice target and track completed days and streaks.',
+  },
+  {
+    icon: BookOpen,
+    title: 'Session Journal',
+    text: 'Record practice focus, minutes, and notes for each day on your calendar.',
   },
 ]
 

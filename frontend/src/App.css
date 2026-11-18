@@ -1137,6 +1137,82 @@ button.calendar-day:disabled:not(.calendar-day-logged) {
   background: #22c55e;
 }
 
+.calendar-day-selected:not(.calendar-day-logged) {
+  border-color: rgba(190, 24, 93, 0.55);
+  background: rgba(252, 231, 243, 0.8);
+}
+
+.practice-journal-form {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(217, 70, 239, 0.14);
+}
+
+.practice-journal-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.practice-journal-title .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.practice-journal-title h4 {
+  margin-top: 4px;
+  color: #4a1d2d;
+}
+
+.practice-journal-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.45fr);
+  gap: 12px;
+}
+
+.practice-journal-fields label {
+  display: grid;
+  gap: 6px;
+  color: #4a1d2d;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.practice-journal-fields input,
+.practice-journal-fields textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid rgba(190, 24, 93, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #4a1d2d;
+  font-weight: 400;
+}
+
+.practice-journal-fields textarea {
+  resize: vertical;
+}
+
+.practice-journal-notes {
+  grid-column: 1 / -1;
+}
+
+.practice-journal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.practice-journal-footer p {
+  color: #76546a;
+  font-size: 0.82rem;
+}
+
 .goal-settings-form {
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.4fr) auto;
@@ -1987,6 +2063,19 @@ button.calendar-day:disabled:not(.calendar-day-logged) {
 
   .practice-calendar-grid {
     gap: 5px;
+  }
+
+  .practice-journal-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-journal-notes {
+    grid-column: auto;
+  }
+
+  .practice-journal-footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .calendar-day {
